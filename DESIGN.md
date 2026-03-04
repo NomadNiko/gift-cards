@@ -25,6 +25,18 @@ A web-based gift card management system for restaurants that enables managers to
   name: string                    // "Holiday Special", "Birthday Card"
   description: string
   imageUrl: string                // S3/local file path
+  
+  // Code placement on certificate
+  codePosition: {
+    x: number                     // X coordinate (percentage or pixels)
+    y: number                     // Y coordinate (percentage or pixels)
+    width: number                 // Width of code area
+    height: number                // Height of code area
+    fontSize?: number             // Optional font size
+    fontColor?: string            // Optional font color (default: black)
+    alignment?: 'left' | 'center' | 'right'  // Text alignment
+  }
+  
   isActive: boolean               // Available for purchase
   createdBy: User                 // Manager who created it
   createdAt: Date
@@ -39,6 +51,7 @@ A web-based gift card management system for restaurants that enables managers to
   id: string
   code: string                    // Unique redemption code (e.g., "GC-XXXX-XXXX-XXXX")
   templateId: string              // Reference to GiftCardTemplate
+  widgetId?: string               // Reference to Widget used for purchase (tracking)
   
   // Purchase Info
   originalAmount: number          // Initial purchase amount
@@ -91,15 +104,22 @@ A web-based gift card management system for restaurants that enables managers to
 ```typescript
 {
   id: string
-  restaurantId: string            // For future multi-tenant
-  apiKey: string                  // Public API key for widget
+  name: string                    // "Main Website Widget", "Partner Restaurant Widget"
+  templateId: string              // Specific template for this widget
+  apiKey: string                  // Unique public API key for this widget
   allowedDomains: string[]        // CORS whitelist
+  
   customization: {
     primaryColor: string
+    secondaryColor?: string
     buttonText: string
     logoUrl?: string
+    headerText?: string           // Custom header for widget
+    footerText?: string           // Custom footer text
   }
+  
   isActive: boolean
+  createdBy: User                 // Manager who created it
   createdAt: Date
   updatedAt: Date
 }
@@ -142,14 +162,20 @@ GET    /api/v1/redemptions                  List all redemptions (Manager/Admin)
 ### Widget Configuration
 
 ```
-GET    /api/v1/widget/config                Get widget config (Public with API key)
-POST   /api/v1/widget/config                Create/update config (Admin)
+GET    /api/v1/widgets                      List all widgets (Manager/Admin)
+POST   /api/v1/widgets                      Create widget (Manager/Admin)
+GET    /api/v1/widgets/:id                  Get widget details
+PATCH  /api/v1/widgets/:id                  Update widget (Manager/Admin)
+DELETE /api/v1/widgets/:id                  Delete widget (Manager/Admin)
+GET    /api/v1/widgets/public/:apiKey       Get widget config by API key (Public)
 ```
 
 ### Analytics/Reports
 
 ```
 GET    /api/v1/reports/sales                Sales summary
+GET    /api/v1/reports/sales/by-widget      Sales by widget (campaign tracking)
+GET    /api/v1/reports/sales/by-template    Sales by template
 GET    /api/v1/reports/redemptions          Redemption summary
 GET    /api/v1/reports/outstanding          Outstanding balance report
 ```
@@ -164,16 +190,20 @@ GET    /api/v1/reports/outstanding          Outstanding balance report
 2. Navigates to "Gift Card Templates"
 3. Clicks "Create New Template"
 4. Uploads image (drag-drop or file picker)
-5. Enters name and description
-6. Sets active/inactive status
-7. Saves template
-8. System stores image and creates template record
+5. **Image Editor appears with uploaded image**
+6. **Manager clicks/drags to select rectangular area for gift card code**
+7. **Preview shows sample code in selected position**
+8. **Manager can adjust position, size, font size, color, and alignment**
+9. Enters name and description
+10. Sets active/inactive status
+11. Saves template
+12. System stores image and code position configuration
 
 ### 2. Customer: Purchase Gift Card (Widget)
 
 1. Customer visits restaurant website with embedded widget
-2. Widget loads active templates
-3. Customer selects template
+2. Widget loads template associated with that specific widget instance
+3. Customer views template preview
 4. Enters amount (with min/max validation)
 5. Enters purchaser info (name, email)
 6. Optionally enters recipient info
@@ -182,10 +212,31 @@ GET    /api/v1/reports/outstanding          Outstanding balance report
 9. Clicks "Purchase" (payment integration placeholder)
 10. System generates unique code
 11. System creates GiftCard record
-12. System sends email with PDF/image of gift card
-13. Widget displays success with gift card preview
+12. System generates gift card visual with code overlaid at configured position
+13. System sends email with PDF/image of gift card
+14. Widget displays success with gift card preview
 
-### 3. Manager: Redeem Gift Card
+### 3. Manager: Create Widget for Template
+
+1. Manager logs into console
+2. Navigates to "Gift Card Templates"
+3. Selects a template
+4. Clicks "Create Widget" or navigates to "Widgets" section
+5. Enters widget name (e.g., "Main Website", "Partner Event")
+6. Selects template for this widget
+7. Configures customization:
+   - Primary/secondary colors
+   - Button text
+   - Header/footer text
+   - Logo upload (optional)
+8. Adds allowed domains (CORS whitelist)
+9. Sets active/inactive status
+10. Saves widget
+11. System generates unique API key
+12. System displays embed code snippet for copying
+13. Manager copies embed code to use on website(s)
+
+### 4. Manager: Redeem Gift Card
 
 1. Manager logs into console
 2. Navigates to "Redeem Gift Card"
@@ -197,7 +248,19 @@ GET    /api/v1/reports/outstanding          Outstanding balance report
 8. System updates balance and creates redemption record
 9. System displays updated balance
 
-### 4. Customer: Check Balance
+### 4. Manager: Redeem Gift Card
+
+1. Manager logs into console
+2. Navigates to "Redeem Gift Card"
+3. Enters gift card code or scans QR code
+4. System displays gift card details and current balance
+5. Manager enters redemption amount
+6. Optionally adds notes
+7. Confirms redemption
+8. System updates balance and creates redemption record
+9. System displays updated balance
+
+### 5. Customer: Check Balance
 
 1. Customer visits balance lookup page (public)
 2. Enters gift card code OR email address
@@ -215,6 +278,12 @@ GET    /api/v1/reports/outstanding          Outstanding balance report
   /templates                      List all templates
   /templates/new                  Create new template
   /templates/:id/edit             Edit template
+  /templates/:id/widgets          List widgets for template
+  
+  /widgets                        List all widgets
+  /widgets/new                    Create new widget
+  /widgets/:id/edit               Edit widget
+  /widgets/:id/embed              View embed code
   
   /purchases                      List all purchases
   /purchases/:id                  View purchase details
@@ -237,13 +306,100 @@ GET    /api/v1/reports/outstanding          Outstanding balance report
 ### Widget (Standalone)
 
 - Embeddable React component
+- Loads single template based on widget API key
 - Minimal dependencies
-- Configurable styling
+- Configurable styling per widget instance
 - Communicates with public API endpoints
 
 ---
 
 ## Technical Implementation Details
+
+### Image Editor for Code Placement
+
+**Component: CodePositionEditor**
+
+```typescript
+interface CodePositionEditorProps {
+  imageUrl: string;
+  initialPosition?: CodePosition;
+  onPositionChange: (position: CodePosition) => void;
+}
+
+interface CodePosition {
+  x: number;        // Percentage (0-100)
+  y: number;        // Percentage (0-100)
+  width: number;    // Percentage (0-100)
+  height: number;   // Percentage (0-100)
+  fontSize?: number;
+  fontColor?: string;
+  alignment?: 'left' | 'center' | 'right';
+}
+```
+
+**Implementation Approach:**
+1. Display uploaded image in canvas/container
+2. Overlay draggable/resizable rectangle for code area
+3. Show live preview with sample code (e.g., "GC-XXXX-XXXX-XXXX")
+4. Store position as percentages for responsive rendering
+5. Provide controls for font size, color, and alignment
+
+**Libraries to Consider:**
+- `react-rnd` - Draggable and resizable component
+- `react-image-crop` - Similar UX to image cropping
+- Custom Canvas implementation for precise control
+
+**Preview Mode:**
+- Real-time preview showing how code will appear
+- Toggle between preview and edit mode
+- Sample codes with different lengths to test fit
+
+**User Experience Flow:**
+1. Manager uploads template image
+2. Image displays in editor with overlay controls
+3. Manager drags/resizes rectangle to desired position
+4. Live preview shows "GC-XXXX-XXXX-XXXX" in selected area
+5. Manager adjusts font size using slider
+6. Manager selects font color using color picker
+7. Manager chooses alignment (left/center/right)
+8. Preview updates in real-time
+9. Manager saves template with position data
+
+**Validation:**
+- Ensure code area is within image bounds
+- Warn if area is too small for typical code length
+- Suggest optimal font size based on area dimensions
+
+### Widget Instance Management
+
+**Widget Embed Code Generation:**
+
+```html
+<!-- Each widget has unique API key tied to specific template -->
+<div id="gift-card-widget-{uniqueId}"></div>
+<script src="https://gift-cards.nomadsoft.us/widget.js"></script>
+<script>
+  GiftCardWidget.init({
+    apiKey: 'wgt_xxxxxxxxxxxx',  // Unique per widget
+    containerId: 'gift-card-widget-{uniqueId}',
+    // Customization loaded from backend via API key
+  });
+</script>
+```
+
+**Widget Loading Flow:**
+1. Widget script loads with API key
+2. Fetches widget configuration from `/api/v1/widgets/public/:apiKey`
+3. Loads associated template
+4. Applies customization (colors, text, logo)
+5. Renders purchase interface for that specific template
+
+**Benefits of Per-Template Widgets:**
+- Different templates on different pages/sites
+- Separate tracking per widget/campaign
+- Custom branding per partnership
+- Independent domain whitelisting
+- A/B testing different templates
 
 ### Gift Card Code Generation
 
@@ -264,17 +420,62 @@ function generateGiftCardCode(): string {
 
 ### Gift Card Visual Generation
 
-**Option 1: Server-side PDF Generation**
-- Use library like `pdfkit` or `puppeteer`
-- Generate PDF with template image + code + amount
-- Store as file or generate on-demand
+**Server-side Generation with Code Overlay**
 
-**Option 2: Client-side Canvas/HTML**
-- Render gift card in browser using Canvas API
-- Allow download as image/PDF
-- Lighter server load
+```typescript
+interface GenerateGiftCardVisualParams {
+  templateImageUrl: string;
+  codePosition: CodePosition;
+  giftCardCode: string;
+  amount: number;
+}
 
-**Recommendation**: Option 2 for MVP, Option 1 for production
+// Using Canvas API (Node.js with 'canvas' package) or Puppeteer
+async function generateGiftCardVisual(params: GenerateGiftCardVisualParams) {
+  // 1. Load template image
+  // 2. Create canvas with image dimensions
+  // 3. Draw template image
+  // 4. Calculate absolute position from percentages
+  // 5. Draw code text at specified position with styling
+  // 6. Optionally add amount, date, etc.
+  // 7. Export as PNG/PDF
+  // 8. Return file path or buffer
+}
+```
+
+**Client-side Preview (Manager Console & Widget)**
+
+```typescript
+// React component for live preview
+function GiftCardPreview({ template, code, amount }) {
+  return (
+    <div style={{ position: 'relative' }}>
+      <img src={template.imageUrl} alt="Gift Card" />
+      <div
+        style={{
+          position: 'absolute',
+          left: `${template.codePosition.x}%`,
+          top: `${template.codePosition.y}%`,
+          width: `${template.codePosition.width}%`,
+          height: `${template.codePosition.height}%`,
+          fontSize: template.codePosition.fontSize,
+          color: template.codePosition.fontColor,
+          textAlign: template.codePosition.alignment,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: template.codePosition.alignment,
+        }}
+      >
+        {code}
+      </div>
+    </div>
+  );
+}
+```
+
+**Recommendation**: 
+- Client-side preview for real-time feedback during template creation
+- Server-side generation for final gift card (email/download) to ensure consistency
 
 ### Email Template
 
@@ -294,19 +495,33 @@ Body:
 ### Widget Embedding
 
 ```html
-<!-- Restaurant website embeds this -->
-<div id="gift-card-widget"></div>
+<!-- Restaurant embeds widget for specific template -->
+<div id="gift-card-widget-main"></div>
 <script src="https://gift-cards.nomadsoft.us/widget.js"></script>
 <script>
   GiftCardWidget.init({
-    apiKey: 'pub_xxxxxxxxxxxx',
-    containerId: 'gift-card-widget',
-    theme: {
-      primaryColor: '#ff6b6b'
-    }
+    apiKey: 'wgt_abc123xyz',      // Unique widget API key
+    containerId: 'gift-card-widget-main'
+  });
+</script>
+
+<!-- Partner site embeds different widget/template -->
+<div id="gift-card-widget-partner"></div>
+<script src="https://gift-cards.nomadsoft.us/widget.js"></script>
+<script>
+  GiftCardWidget.init({
+    apiKey: 'wgt_def456uvw',      // Different widget, different template
+    containerId: 'gift-card-widget-partner'
   });
 </script>
 ```
+
+**Widget Configuration Loaded via API Key:**
+- Template to display
+- Color scheme
+- Custom text/branding
+- Allowed domains (CORS)
+- Tracking/analytics ID
 
 ### Security Considerations
 
@@ -352,13 +567,17 @@ Body:
 ✅ **Must Have**
 - Gift card template CRUD (manager console)
 - Image upload for templates
+- **Interactive code position editor for templates**
+- **Widget CRUD with unique API keys**
+- **Widget embed code generation and display**
 - Gift card purchase flow (no payment)
 - Unique code generation
+- **Gift card visual with code overlay at configured position**
 - Gift card visual display/print
-- Email delivery
+- Email delivery with generated visual
 - Redemption interface (full & partial)
 - Balance lookup (by code)
-- Basic list views (templates, purchases, redemptions)
+- Basic list views (templates, widgets, purchases, redemptions)
 
 ❌ **Deferred**
 - Payment gateway integration (Stripe/Square)
@@ -417,14 +636,27 @@ src/
         document/
           gift-card.schema.ts
           gift-card.repository.ts
+      visual-generator/
+        gift-card-visual.service.ts    # Generates images with code overlay
     gift-cards.controller.ts
     gift-cards.service.ts
     gift-cards.module.ts
   
-  widget/
-    widget.controller.ts
-    widget.service.ts
-    widget.module.ts
+  widgets/
+    domain/
+      widget.ts
+    dto/
+      create-widget.dto.ts
+      update-widget.dto.ts
+      query-widget.dto.ts
+    infrastructure/
+      persistence/
+        document/
+          widget.schema.ts
+          widget.repository.ts
+    widgets.controller.ts
+    widgets.service.ts
+    widgets.module.ts
   
   reports/
     reports.controller.ts
@@ -447,6 +679,19 @@ src/
             [id]/
               edit/
                 page.tsx                # Edit template
+              widgets/
+                page.tsx                # List widgets for template
+          
+          widgets/
+            page.tsx                    # List all widgets
+            new/
+              page.tsx                  # Create widget
+            [id]/
+              edit/
+                page.tsx                # Edit widget
+              embed/
+                page.tsx                # View embed code
+          
           purchases/
             page.tsx                    # List purchases
             [id]/
@@ -467,7 +712,11 @@ src/
     gift-cards/
       template-form.tsx
       template-card.tsx
-      gift-card-visual.tsx
+      code-position-editor.tsx          # Interactive code placement editor
+      gift-card-visual.tsx              # Renders template with code overlay
+      widget-form.tsx
+      widget-card.tsx
+      widget-embed-code.tsx
       redemption-form.tsx
       balance-lookup.tsx
   
@@ -476,11 +725,14 @@ src/
       services/
         gift-card-templates.ts
         gift-cards.ts
+        widgets.ts
         redemptions.ts
       types/
         gift-card-template.ts
         gift-card.ts
+        widget.ts
         redemption.ts
+        code-position.ts
   
   widget/
     index.tsx                           # Standalone widget entry
@@ -500,37 +752,70 @@ src/
 
 ### 2. Create/Edit Template Form
 - **Image Upload**: Drag-drop zone with preview
+- **Code Position Editor**: 
+  - Interactive image editor showing uploaded template
+  - Draggable/resizable rectangle overlay for code placement
+  - Live preview with sample code
+  - Controls for font size, color, alignment
+  - "Preview" button to see final result
 - **Fields**: Name, Description
 - **Toggle**: Active/Inactive
-- **Preview**: Live preview of how it will appear in widget
+- **Preview Panel**: Side-by-side view of template with code overlay
 - **Actions**: Save, Cancel
 
-### 3. Purchases List
+### 3. Widget Management Page
+- **Header**: "Widgets" with "Create New Widget" button
+- **List View**: Cards showing widget name, template, API key (masked), status
+- **Actions**: Edit, View Embed Code, Delete, Toggle Active
+- **Filters**: Active/Inactive, By Template
+
+### 4. Create/Edit Widget Form
+- **Widget Name**: Input field
+- **Template Selection**: Dropdown of available templates with preview
+- **Customization Section**:
+  - Color pickers (primary, secondary)
+  - Text inputs (button text, header, footer)
+  - Logo upload (optional)
+- **Allowed Domains**: Multi-line input for domain whitelist
+- **Toggle**: Active/Inactive
+- **Preview**: Live preview of widget appearance
+- **Actions**: Save, Cancel
+
+### 5. Widget Embed Code Modal
+- **API Key**: Display with copy button
+- **Embed Code**: Code snippet with syntax highlighting
+- **Copy Button**: One-click copy to clipboard
+- **Instructions**: Step-by-step guide for embedding
+- **Test Link**: Link to test page showing widget in action
+
+### 6. Purchases List
 - **Table Columns**: Code, Template, Amount, Balance, Purchaser, Date, Status
 - **Filters**: Date range, Status, Template
 - **Search**: By code, email
 - **Actions**: View details, Cancel (admin only)
 
-### 4. Redemption Interface
+### 7. Redemption Interface
 - **Code Input**: Large input field with "Lookup" button
-- **Gift Card Display**: Shows template image, code, current balance
+- **Gift Card Display**: Shows template image with code overlay, current balance
 - **Redemption Form**: Amount input, Notes textarea
 - **Validation**: Cannot exceed current balance
 - **History**: List of previous redemptions below
 - **Actions**: Redeem, Cancel
 
-### 5. Balance Lookup (Public)
+### 8. Balance Lookup (Public)
 - **Simple Interface**: Code or Email input
 - **Results**: List of gift cards with balances
-- **Gift Card Card**: Template image, code (partially masked), balance
+- **Gift Card Card**: Template image with code overlay, code (partially masked), balance
 - **Action**: "View Full Details" (shows full code)
 
-### 6. Widget (Embedded)
-- **Step 1**: Template selection (grid of active templates)
-- **Step 2**: Amount input (with min/max validation)
-- **Step 3**: Customer info (name, email, optional recipient)
-- **Step 4**: Review and purchase
-- **Step 5**: Success with gift card preview and download option
+### 9. Widget (Embedded)
+- **Single Template Display**: Shows template associated with widget
+- **Amount Input**: With min/max validation
+- **Customer Info Form**: Name, email, optional recipient
+- **Custom Message**: Optional text area
+- **Review**: Summary with template preview
+- **Purchase**: Confirmation (payment placeholder)
+- **Success**: Gift card preview with code overlay and download option
 
 ---
 
@@ -611,6 +896,8 @@ Enjoy!
 - Outstanding balance
 - Time to redemption
 - Popular templates
+- **Widget performance (sales per widget/campaign)**
+- **Conversion rate by widget**
 
 ### Logging
 - All redemptions logged with manager ID
@@ -648,27 +935,30 @@ Enjoy!
 ## Timeline Estimate (MVP)
 
 ### Week 1: Backend Foundation
-- Database schemas
-- Gift card template CRUD
+- Database schemas (templates with code position, widgets)
+- Gift card template CRUD with code position
+- Widget CRUD with API key generation
 - Gift card purchase endpoint
 - Code generation logic
 
 ### Week 2: Backend Completion
+- Visual generator service (code overlay on templates)
 - Redemption logic
 - Balance lookup
-- Email integration
+- Email integration with generated visuals
 - Reports endpoints
 
 ### Week 3: Manager Console
-- Template management UI
+- Template management UI with code position editor
+- Widget management UI
+- Widget embed code display
 - Purchases list
 - Redemption interface
-- Reports dashboard
 
 ### Week 4: Widget & Polish
-- Embeddable widget
+- Embeddable widget (loads via API key)
 - Public balance lookup
-- Gift card visual generation
+- Gift card visual generation (client & server)
 - Testing and bug fixes
 
 **Total: 4 weeks for MVP**
@@ -677,13 +967,15 @@ Enjoy!
 
 ## Success Criteria
 
-✅ Manager can create and manage gift card templates  
+✅ Manager can create and manage gift card templates with custom code placement  
+✅ Manager can create multiple widgets for different templates/campaigns  
 ✅ Customers can purchase gift cards (without payment)  
-✅ Gift cards are emailed with unique codes  
+✅ Gift cards are emailed with unique codes overlaid on template  
 ✅ Managers can redeem full or partial amounts  
 ✅ Customers can check balances  
 ✅ All transactions are tracked and auditable  
-✅ Widget can be embedded on external websites  
+✅ Widgets can be embedded on external websites with unique API keys  
+✅ Each widget displays a specific template with custom branding  
 ✅ System is secure and performant  
 
 ---
