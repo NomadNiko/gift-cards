@@ -134,7 +134,7 @@ function RedeemPage() {
                 label="Gift Card Code"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                placeholder="GC-XXXX-XXXX-XXXX"
+                placeholder="GC-XXXX-XXXX"
                 fullWidth
                 onKeyDown={(e) => e.key === "Enter" && handleLookup()}
                 sx={{ "& input": { fontFamily: "monospace", fontSize: 18 } }}

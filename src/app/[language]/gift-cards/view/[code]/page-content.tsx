@@ -16,9 +16,10 @@ import HTTP_CODES_ENUM from "@/services/api/types/http-codes";
 import { GiftCard } from "@/services/api/types/gift-card";
 import { GiftCardTemplate } from "@/services/api/types/gift-card-template";
 import { useCurrency } from "@/services/currency/currency-provider";
+import { QRCodeSVG } from "qrcode.react";
 
 export default function GiftCardView() {
-  const { symbol: CURRENCY_SYMBOL } = useCurrency();
+  const { symbol: CURRENCY_SYMBOL, code: currencyCode } = useCurrency();
   const params = useParams<{ code: string }>();
   const [giftCard, setGiftCard] = useState<GiftCard | null>(null);
   const [template, setTemplate] = useState<GiftCardTemplate | null>(null);
@@ -68,6 +69,23 @@ export default function GiftCardView() {
     return () => window.removeEventListener("resize", updateScale);
   }, [updateScale]);
 
+  const formatExpDate = useCallback(
+    (dateStr: string) => {
+      const d = new Date(dateStr);
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      return currencyCode === "USD"
+        ? `${mm}/${dd}/${yyyy}`
+        : `${dd}/${mm}/${yyyy}`;
+    },
+    [currencyCode]
+  );
+
+  const expirationLabel = template?.expirationDate
+    ? `EXP: ${formatExpDate(template.expirationDate)}`
+    : "EXP: Never";
+
   const handlePrint = useCallback(() => {
     window.print();
   }, []);
@@ -116,9 +134,14 @@ export default function GiftCardView() {
                       width: `${template.codePosition.width}%`,
                       height: `${template.codePosition.height}%`,
                       display: "flex",
+                      flexDirection: "row",
                       alignItems: "center",
                       justifyContent:
-                        template.codePosition.alignment || "center",
+                        template.codePosition.alignment === "left"
+                          ? "flex-start"
+                          : template.codePosition.alignment === "right"
+                            ? "flex-end"
+                            : "center",
                       overflow: "hidden",
                     }}
                   >
@@ -130,10 +153,39 @@ export default function GiftCardView() {
                         fontWeight: "bold",
                         whiteSpace: "nowrap",
                         px: 0.5,
+                        lineHeight: 1.2,
                       }}
                     >
                       {giftCard.code}
                     </Typography>
+                    <Typography
+                      sx={{
+                        fontSize:
+                          (template.codePosition.fontSize || 16) * scale * 0.6,
+                        color: template.codePosition.fontColor || "#000",
+                        whiteSpace: "nowrap",
+                        lineHeight: 1,
+                        ml: 1,
+                      }}
+                    >
+                      {expirationLabel}
+                    </Typography>
+                  </Box>
+                )}
+                {template.qrPosition && (
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      left: `${template.qrPosition.x}%`,
+                      top: `${template.qrPosition.y}%`,
+                      width: `${template.qrPosition.size}%`,
+                    }}
+                  >
+                    <QRCodeSVG
+                      value={`${window.location.origin}/gift-cards/qr/${giftCard.code}`}
+                      size={1000}
+                      style={{ width: "100%", height: "auto" }}
+                    />
                   </Box>
                 )}
               </Box>
@@ -151,6 +203,28 @@ export default function GiftCardView() {
                 {CURRENCY_SYMBOL}
                 {giftCard.originalAmount.toFixed(2)}
               </Typography>
+              {giftCard.currentBalance !== giftCard.originalAmount && (
+                <Typography
+                  variant="h6"
+                  color={
+                    giftCard.currentBalance > 0
+                      ? "success.main"
+                      : "text.secondary"
+                  }
+                >
+                  Balance: {CURRENCY_SYMBOL}
+                  {giftCard.currentBalance.toFixed(2)}
+                </Typography>
+              )}
+              {template?.expirationDate && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 1 }}
+                >
+                  {expirationLabel}
+                </Typography>
+              )}
               {giftCard.notes && (
                 <Typography
                   variant="body1"
@@ -165,6 +239,22 @@ export default function GiftCardView() {
                   For: {giftCard.recipientName}
                 </Typography>
               )}
+              <Box sx={{ mt: 2 }}>
+                {!template?.qrPosition && (
+                  <QRCodeSVG
+                    value={`${window.location.origin}/gift-cards/qr/${giftCard.code}`}
+                    size={120}
+                  />
+                )}
+                <Typography
+                  variant="caption"
+                  display="block"
+                  color="text.secondary"
+                  sx={{ mt: 0.5 }}
+                >
+                  Scan to check balance or redeem
+                </Typography>
+              </Box>
             </Box>
           </Paper>
         </Grid>

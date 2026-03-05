@@ -9,7 +9,7 @@ import Paper from "@mui/material/Paper";
 import Chip from "@mui/material/Chip";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   useGetGiftCardByCodeService,
   useGetGiftCardsByEmailService,
@@ -17,6 +17,7 @@ import {
 import HTTP_CODES_ENUM from "@/services/api/types/http-codes";
 import { GiftCard } from "@/services/api/types/gift-card";
 import { useCurrency } from "@/services/currency/currency-provider";
+import { useSearchParams } from "next/navigation";
 
 const statusColors: Record<
   string,
@@ -30,11 +31,13 @@ const statusColors: Record<
 
 export default function BalanceLookup() {
   const { symbol: CURRENCY_SYMBOL } = useCurrency();
-  const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get("code") || "");
   const [results, setResults] = useState<GiftCard[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const autoSearched = useRef(false);
 
   const lookupByCode = useGetGiftCardByCodeService();
   const lookupByEmail = useGetGiftCardsByEmailService();
@@ -69,6 +72,13 @@ export default function BalanceLookup() {
     }
   }, [query, lookupByCode, lookupByEmail]);
 
+  useEffect(() => {
+    if (searchParams.get("code") && !autoSearched.current) {
+      autoSearched.current = true;
+      handleSearch();
+    }
+  }, [searchParams, handleSearch]);
+
   return (
     <Container maxWidth="sm">
       <Grid container spacing={3} pt={6}>
@@ -87,7 +97,7 @@ export default function BalanceLookup() {
               label="Gift Card Code or Email"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="GC-XXXX-XXXX-XXXX or email@example.com"
+              placeholder="GC-XXXX-XXXX or email@example.com"
               fullWidth
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             />

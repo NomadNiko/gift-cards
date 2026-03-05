@@ -193,21 +193,30 @@ function PurchasesList() {
                       · {gc.purchaserName}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
+                      · {gc.purchaserEmail}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
                       · {formatDateTime(gc.purchaseDate)}
                     </Typography>
                   </Box>
-                  {isRedeemable(gc) && (
-                    <Box sx={{ mt: 1 }}>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        component={Link}
-                        href={`/admin-panel/gift-cards/redeem?code=${gc.code}`}
-                      >
-                        Redeem
-                      </Button>
-                    </Box>
-                  )}
+                  <Box sx={{ mt: 1, display: "flex", gap: 1 }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      component={Link}
+                      href={`/gift-cards/view/${gc.code}`}
+                    >
+                      View
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      component={Link}
+                      href={`/admin-panel/gift-cards/redeem?code=${gc.code}`}
+                    >
+                      Redeem
+                    </Button>
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>
@@ -295,7 +304,15 @@ function PurchasesList() {
                         />
                       </TableCell>
                       <TableCell>
-                        {isRedeemable(gc) && (
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            component={Link}
+                            href={`/gift-cards/view/${gc.code}`}
+                          >
+                            View
+                          </Button>
                           <Button
                             size="small"
                             variant="outlined"
@@ -304,7 +321,7 @@ function PurchasesList() {
                           >
                             Redeem
                           </Button>
-                        )}
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}

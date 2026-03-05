@@ -130,6 +130,18 @@ function TemplatesList() {
                     size="small"
                     variant="outlined"
                   />
+                  {template.expirationDate && (
+                    <Chip
+                      label={`Exp: ${new Date(template.expirationDate).toLocaleDateString()}`}
+                      size="small"
+                      variant="outlined"
+                      color={
+                        new Date(template.expirationDate) < new Date()
+                          ? "error"
+                          : "default"
+                      }
+                    />
+                  )}
                 </Box>
                 <Typography variant="body2" color="text.secondary" noWrap>
                   {template.description}

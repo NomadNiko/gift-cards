@@ -4,6 +4,7 @@ import { RoleEnum } from "@/services/api/types/role";
 import withPageRequiredAuth from "@/services/auth/with-page-required-auth";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
@@ -133,7 +134,30 @@ function CreateWidget() {
               name="primaryColor"
               control={control}
               render={({ field }) => (
-                <TextField {...field} label="Primary Color" fullWidth />
+                <Box>
+                  <Typography variant="body2" sx={{ mb: 1 }}>
+                    Primary Color
+                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <input
+                      type="color"
+                      value={field.value}
+                      onChange={field.onChange}
+                      style={{
+                        width: 48,
+                        height: 48,
+                        border: "none",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <TextField
+                      value={field.value}
+                      onChange={field.onChange}
+                      size="small"
+                      sx={{ width: 120 }}
+                    />
+                  </Box>
+                </Box>
               )}
             />
           </Grid>

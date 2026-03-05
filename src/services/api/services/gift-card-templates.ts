@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import useFetch from "../use-fetch";
 import { API_URL } from "../config";
 import wrapperFetchJsonResponse from "../wrapper-fetch-json-response";
-import { GiftCardTemplate } from "../types/gift-card-template";
+import { GiftCardTemplate, QrPosition } from "../types/gift-card-template";
 import { InfinityPaginationType } from "../types/infinity-pagination";
 import { RequestConfigType } from "./types/request-config";
 import { CodePosition } from "../types/code-position";
@@ -14,6 +14,9 @@ export type CreateGiftCardTemplateRequest = {
   image: string;
   codePosition: CodePosition;
   redemptionType?: "partial" | "full";
+  expirationDate?: string;
+  codePrefix?: string;
+  qrPosition?: QrPosition;
   isActive?: boolean;
 };
 

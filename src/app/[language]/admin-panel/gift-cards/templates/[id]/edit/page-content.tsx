@@ -17,7 +17,7 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import LinearProgress from "@mui/material/LinearProgress";
 import Alert from "@mui/material/Alert";
 import MenuItem from "@mui/material/MenuItem";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { useCallback, useState, useRef, useEffect } from "react";
 import { useFileUploadService } from "@/services/api/services/files";
 import {
@@ -27,12 +27,16 @@ import {
 import HTTP_CODES_ENUM from "@/services/api/types/http-codes";
 import { useRouter, useParams } from "next/navigation";
 import { CodePosition } from "@/services/api/types/code-position";
+import { QrPosition } from "@/services/api/types/gift-card-template";
+import { useCurrency } from "@/services/api/types/currency";
 
 type FormData = {
   name: string;
   description: string;
   isActive: boolean;
   redemptionType: "partial" | "full";
+  expirationDate: string;
+  codePrefix: string;
 };
 
 const DEFAULT_CODE_POSITION: CodePosition = {
@@ -63,6 +67,12 @@ function EditTemplate() {
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(
     null
   );
+  const [dragMode, setDragMode] = useState<"code" | "qr">("code");
+  const [qrPosition, setQrPosition] = useState<QrPosition>({
+    x: 85,
+    y: 5,
+    size: 12,
+  });
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
   const { handleSubmit, control, reset } = useForm<FormData>({
@@ -71,8 +81,25 @@ function EditTemplate() {
       description: "",
       isActive: true,
       redemptionType: "full" as const,
+      expirationDate: "",
+      codePrefix: "GC",
     },
   });
+
+  const watchedExpDate = useWatch({ control, name: "expirationDate" });
+  const watchedPrefix = useWatch({ control, name: "codePrefix" });
+  const { code: currencyCode } = useCurrency();
+
+  const expirationLabel = (() => {
+    if (!watchedExpDate) return "EXP: Never";
+    const d = new Date(watchedExpDate);
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    return currencyCode === "USD"
+      ? `EXP: ${mm}/${dd}/${yyyy}`
+      : `EXP: ${dd}/${mm}/${yyyy}`;
+  })();
 
   useEffect(() => {
     async function load() {
@@ -85,10 +112,17 @@ function EditTemplate() {
             description: data.description,
             isActive: data.isActive,
             redemptionType: data.redemptionType || "full",
+            expirationDate: data.expirationDate
+              ? data.expirationDate.split("T")[0]
+              : "",
+            codePrefix: data.codePrefix || "GC",
           });
           setImageUrl(data.image);
           if (data.codePosition) {
             setCodePosition(data.codePosition);
+          }
+          if (data.qrPosition) {
+            setQrPosition(data.qrPosition);
           }
         } else {
           setError("Template not found.");
@@ -133,15 +167,23 @@ function EditTemplate() {
     (e: React.MouseEvent) => {
       const pos = getRelativePosition(e);
       if (!pos) return;
-      setIsDragging(true);
-      setDragStart(pos);
+      if (dragMode === "qr") {
+        setQrPosition((prev) => ({
+          ...prev,
+          x: Math.max(0, Math.min(pos.x, 100 - prev.size)),
+          y: Math.max(0, Math.min(pos.y, 100 - prev.size)),
+        }));
+      } else {
+        setIsDragging(true);
+        setDragStart(pos);
+      }
     },
-    [getRelativePosition]
+    [getRelativePosition, dragMode]
   );
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
-      if (!isDragging || !dragStart) return;
+      if (!isDragging || !dragStart || dragMode === "qr") return;
       const pos = getRelativePosition(e);
       if (!pos) return;
       const x = Math.min(dragStart.x, pos.x);
@@ -173,13 +215,16 @@ function EditTemplate() {
         image: imageUrl,
         codePosition,
         redemptionType: formData.redemptionType,
+        expirationDate: formData.expirationDate || undefined,
+        codePrefix: formData.codePrefix || "GC",
+        qrPosition,
         isActive: formData.isActive,
       });
       if (status === HTTP_CODES_ENUM.OK) {
         router.push("/admin-panel/gift-cards/templates");
       }
     },
-    [imageUrl, codePosition, updateTemplate, router, params.id]
+    [imageUrl, codePosition, qrPosition, updateTemplate, router, params.id]
   );
 
   if (loading) return <LinearProgress />;
@@ -255,6 +300,44 @@ function EditTemplate() {
             />
           </Grid>
 
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Controller
+              name="expirationDate"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  type="date"
+                  label="Expiration Date"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  helperText="Leave empty for no expiration"
+                />
+              )}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Controller
+              name="codePrefix"
+              control={control}
+              rules={{ required: "Code prefix is required" }}
+              render={({ field, fieldState }) => (
+                <TextField
+                  {...field}
+                  label="Code Prefix"
+                  fullWidth
+                  error={!!fieldState.error}
+                  helperText={
+                    fieldState.error?.message ||
+                    `Codes will look like: ${field.value || "GC"}-XXXX-XXXX`
+                  }
+                  inputProps={{ maxLength: 6 }}
+                />
+              )}
+            />
+          </Grid>
+
           <Grid size={12}>
             <Controller
               name="description"
@@ -287,10 +370,24 @@ function EditTemplate() {
             <>
               <Grid size={12}>
                 <Typography variant="h6" gutterBottom>
-                  Code Position
+                  Position elements on the template
                 </Typography>
+                <ToggleButtonGroup
+                  value={dragMode}
+                  exclusive
+                  onChange={(_, v) => {
+                    if (v) setDragMode(v);
+                  }}
+                  size="small"
+                  sx={{ mb: 1 }}
+                >
+                  <ToggleButton value="code">Code Area</ToggleButton>
+                  <ToggleButton value="qr">QR Code</ToggleButton>
+                </ToggleButtonGroup>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Click and drag on the image to reposition the code area.
+                  {dragMode === "code"
+                    ? "Click and drag to reposition the code area."
+                    : "Click to place the QR code. Use the slider below to resize."}
                 </Typography>
                 <Paper
                   elevation={2}
@@ -320,6 +417,7 @@ function EditTemplate() {
                       }}
                       draggable={false}
                     />
+                    {/* Code position overlay */}
                     <Box
                       sx={{
                         position: "absolute",
@@ -327,11 +425,17 @@ function EditTemplate() {
                         top: `${codePosition.y}%`,
                         width: `${codePosition.width}%`,
                         height: `${codePosition.height}%`,
-                        border: "2px dashed #00838f",
+                        border: `2px dashed ${dragMode === "code" ? "#00838f" : "rgba(0,131,143,0.4)"}`,
                         backgroundColor: "rgba(0, 131, 143, 0.1)",
                         display: "flex",
+                        flexDirection: "row",
                         alignItems: "center",
-                        justifyContent: codePosition.alignment || "center",
+                        justifyContent:
+                          codePosition.alignment === "left"
+                            ? "flex-start"
+                            : codePosition.alignment === "right"
+                              ? "flex-end"
+                              : "center",
                         pointerEvents: "none",
                         overflow: "hidden",
                       }}
@@ -342,11 +446,44 @@ function EditTemplate() {
                           color: codePosition.fontColor || "#000",
                           fontWeight: "bold",
                           whiteSpace: "nowrap",
+                          lineHeight: 1.2,
                           px: 0.5,
                         }}
                       >
-                        GC-XXXX-XXXX-XXXX
+                        {(watchedPrefix || "GC") + "-XXXX-XXXX"}
                       </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: (codePosition.fontSize || 16) * 0.6,
+                          color: codePosition.fontColor || "#000",
+                          whiteSpace: "nowrap",
+                          lineHeight: 1,
+                          ml: 1,
+                        }}
+                      >
+                        {expirationLabel}
+                      </Typography>
+                    </Box>
+                    {/* QR position overlay */}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        left: `${qrPosition.x}%`,
+                        top: `${qrPosition.y}%`,
+                        width: `${qrPosition.size}%`,
+                        aspectRatio: "1",
+                        border: `2px dashed ${dragMode === "qr" ? "#e65100" : "rgba(230,81,0,0.4)"}`,
+                        backgroundColor: "rgba(230, 81, 0, 0.1)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        pointerEvents: "none",
+                        fontSize: 10,
+                        color: "#e65100",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      QR
                     </Box>
                   </Box>
                 </Paper>
@@ -394,6 +531,20 @@ function EditTemplate() {
                   <ToggleButton value="center">Center</ToggleButton>
                   <ToggleButton value="right">Right</ToggleButton>
                 </ToggleButtonGroup>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Typography gutterBottom>
+                  QR Code Size: {qrPosition.size}%
+                </Typography>
+                <Slider
+                  value={qrPosition.size}
+                  onChange={(_, v) =>
+                    setQrPosition((p) => ({ ...p, size: v as number }))
+                  }
+                  min={5}
+                  max={30}
+                />
               </Grid>
             </>
           )}
