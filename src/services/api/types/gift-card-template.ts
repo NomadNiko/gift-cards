@@ -6,6 +6,7 @@ export interface GiftCardTemplate {
   description: string;
   image: string;
   codePosition: CodePosition;
+  redemptionType: "partial" | "full";
   isActive: boolean;
   createdBy: string;
   createdAt: string;

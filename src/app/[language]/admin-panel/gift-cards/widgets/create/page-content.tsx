@@ -15,7 +15,6 @@ import { useCreateWidgetService } from "@/services/api/services/widgets";
 import { useGetActiveGiftCardTemplatesService } from "@/services/api/services/gift-card-templates";
 import HTTP_CODES_ENUM from "@/services/api/types/http-codes";
 import { useRouter } from "next/navigation";
-import useLanguage from "@/services/i18n/use-language";
 import { useQuery } from "@tanstack/react-query";
 import MenuItem from "@mui/material/MenuItem";
 
@@ -32,7 +31,6 @@ type FormData = {
 
 function CreateWidget() {
   const router = useRouter();
-  const language = useLanguage();
   const createWidget = useCreateWidgetService();
   const getActiveTemplates = useGetActiveGiftCardTemplatesService();
 
@@ -75,10 +73,10 @@ function CreateWidget() {
         isActive: formData.isActive,
       });
       if (status === HTTP_CODES_ENUM.CREATED) {
-        router.push(`/${language}/admin-panel/gift-cards/widgets`);
+        router.push("/admin-panel/gift-cards/widgets");
       }
     },
-    [createWidget, router, language]
+    [createWidget, router]
   );
 
   return (
@@ -188,9 +186,7 @@ function CreateWidget() {
             </Button>
             <Button
               variant="outlined"
-              onClick={() =>
-                router.push(`/${language}/admin-panel/gift-cards/widgets`)
-              }
+              onClick={() => router.push("/admin-panel/gift-cards/widgets")}
             >
               Cancel
             </Button>

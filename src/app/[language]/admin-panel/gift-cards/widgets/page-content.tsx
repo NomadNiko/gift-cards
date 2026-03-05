@@ -20,7 +20,7 @@ import { useQueryClient, InfiniteData } from "@tanstack/react-query";
 import { Widget } from "@/services/api/types/widget";
 import useConfirmDialog from "@/components/confirm-dialog/use-confirm-dialog";
 import LinearProgress from "@mui/material/LinearProgress";
-import useLanguage from "@/services/i18n/use-language";
+
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -85,7 +85,7 @@ function WidgetsList() {
   const deleteService = useDeleteWidgetService();
   const queryClient = useQueryClient();
   const { confirmDialog } = useConfirmDialog();
-  const language = useLanguage();
+
   const [embedWidget, setEmbedWidget] = useState<Widget | null>(null);
 
   const widgets = useMemo(() => {
@@ -138,7 +138,7 @@ function WidgetsList() {
           <Button
             variant="contained"
             component={Link}
-            href={`/${language}/admin-panel/gift-cards/widgets/create`}
+            href="/admin-panel/gift-cards/widgets/create"
           >
             Create Widget
           </Button>
@@ -179,6 +179,13 @@ function WidgetsList() {
                 </Typography>
               </CardContent>
               <CardActions>
+                <Button
+                  size="small"
+                  component={Link}
+                  href={`/admin-panel/gift-cards/widgets/${widget.id}/demo`}
+                >
+                  Demo & Test
+                </Button>
                 <Button size="small" onClick={() => setEmbedWidget(widget)}>
                   Embed Code
                 </Button>

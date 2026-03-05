@@ -16,6 +16,7 @@ import {
 } from "@/services/api/services/gift-cards";
 import HTTP_CODES_ENUM from "@/services/api/types/http-codes";
 import { GiftCard } from "@/services/api/types/gift-card";
+import { useCurrency } from "@/services/currency/currency-provider";
 
 const statusColors: Record<
   string,
@@ -28,6 +29,7 @@ const statusColors: Record<
 };
 
 export default function BalanceLookup() {
+  const { symbol: CURRENCY_SYMBOL } = useCurrency();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GiftCard[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -134,7 +136,8 @@ export default function BalanceLookup() {
                     Original Amount
                   </Typography>
                   <Typography variant="h6">
-                    ${gc.originalAmount.toFixed(2)}
+                    {CURRENCY_SYMBOL}
+                    {gc.originalAmount.toFixed(2)}
                   </Typography>
                 </Grid>
                 <Grid size={6}>
@@ -147,7 +150,8 @@ export default function BalanceLookup() {
                       gc.currentBalance > 0 ? "success.main" : "text.secondary"
                     }
                   >
-                    ${gc.currentBalance.toFixed(2)}
+                    {CURRENCY_SYMBOL}
+                    {gc.currentBalance.toFixed(2)}
                   </Typography>
                 </Grid>
                 <Grid size={12}>

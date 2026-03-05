@@ -14,13 +14,18 @@ import Paper from "@mui/material/Paper";
 import Slider from "@mui/material/Slider";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import LinearProgress from "@mui/material/LinearProgress";
+import Alert from "@mui/material/Alert";
 import MenuItem from "@mui/material/MenuItem";
 import { useForm, Controller } from "react-hook-form";
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import { useFileUploadService } from "@/services/api/services/files";
-import { useCreateGiftCardTemplateService } from "@/services/api/services/gift-card-templates";
+import {
+  useGetGiftCardTemplateService,
+  useUpdateGiftCardTemplateService,
+} from "@/services/api/services/gift-card-templates";
 import HTTP_CODES_ENUM from "@/services/api/types/http-codes";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { CodePosition } from "@/services/api/types/code-position";
 
 type FormData = {
@@ -40,13 +45,17 @@ const DEFAULT_CODE_POSITION: CodePosition = {
   alignment: "center",
 };
 
-function CreateTemplate() {
+function EditTemplate() {
   const router = useRouter();
+  const params = useParams<{ id: string }>();
   const uploadFile = useFileUploadService();
-  const createTemplate = useCreateGiftCardTemplateService();
+  const getTemplate = useGetGiftCardTemplateService();
+  const updateTemplate = useUpdateGiftCardTemplateService();
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [codePosition, setCodePosition] = useState<CodePosition>(
     DEFAULT_CODE_POSITION
   );
@@ -56,7 +65,7 @@ function CreateTemplate() {
   );
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
-  const { handleSubmit, control } = useForm<FormData>({
+  const { handleSubmit, control, reset } = useForm<FormData>({
     defaultValues: {
       name: "",
       description: "",
@@ -64,6 +73,35 @@ function CreateTemplate() {
       redemptionType: "full" as const,
     },
   });
+
+  useEffect(() => {
+    async function load() {
+      if (!params.id) return;
+      try {
+        const { status, data } = await getTemplate(params.id);
+        if (status === HTTP_CODES_ENUM.OK && data) {
+          reset({
+            name: data.name,
+            description: data.description,
+            isActive: data.isActive,
+            redemptionType: data.redemptionType || "full",
+          });
+          setImageUrl(data.image);
+          if (data.codePosition) {
+            setCodePosition(data.codePosition);
+          }
+        } else {
+          setError("Template not found.");
+        }
+      } catch {
+        setError("Failed to load template.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.id]);
 
   const handleFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,8 +166,8 @@ function CreateTemplate() {
 
   const onSubmit = useCallback(
     async (formData: FormData) => {
-      if (!imageUrl) return;
-      const { status } = await createTemplate({
+      if (!imageUrl || !params.id) return;
+      const { status } = await updateTemplate(params.id, {
         name: formData.name,
         description: formData.description,
         image: imageUrl,
@@ -137,19 +175,27 @@ function CreateTemplate() {
         redemptionType: formData.redemptionType,
         isActive: formData.isActive,
       });
-      if (status === HTTP_CODES_ENUM.CREATED) {
+      if (status === HTTP_CODES_ENUM.OK) {
         router.push("/admin-panel/gift-cards/templates");
       }
     },
-    [imageUrl, codePosition, createTemplate, router]
+    [imageUrl, codePosition, updateTemplate, router, params.id]
   );
+
+  if (loading) return <LinearProgress />;
+  if (error)
+    return (
+      <Container maxWidth="md" sx={{ pt: 3 }}>
+        <Alert severity="error">{error}</Alert>
+      </Container>
+    );
 
   return (
     <Container maxWidth="lg">
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container spacing={3} pt={3}>
           <Grid size={12}>
-            <Typography variant="h4">Create Gift Card Template</Typography>
+            <Typography variant="h4">Edit Gift Card Template</Typography>
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
@@ -227,7 +273,7 @@ function CreateTemplate() {
 
           <Grid size={12}>
             <Button variant="outlined" component="label" disabled={uploading}>
-              {uploading ? "Uploading..." : "Upload Template Image"}
+              {uploading ? "Uploading..." : "Replace Template Image"}
               <input
                 type="file"
                 hidden
@@ -241,11 +287,10 @@ function CreateTemplate() {
             <>
               <Grid size={12}>
                 <Typography variant="h6" gutterBottom>
-                  Position the code area on the template
+                  Code Position
                 </Typography>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Click and drag on the image to select where the gift card code
-                  will appear.
+                  Click and drag on the image to reposition the code area.
                 </Typography>
                 <Paper
                   elevation={2}
@@ -264,6 +309,7 @@ function CreateTemplate() {
                     onMouseUp={handleMouseUp}
                     onMouseLeave={handleMouseUp}
                   >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={imageUrl}
                       alt="Template"
@@ -274,7 +320,6 @@ function CreateTemplate() {
                       }}
                       draggable={false}
                     />
-                    {/* Code position overlay */}
                     <Box
                       sx={{
                         position: "absolute",
@@ -307,7 +352,6 @@ function CreateTemplate() {
                 </Paper>
               </Grid>
 
-              {/* Code position controls */}
               <Grid size={{ xs: 12, md: 4 }}>
                 <Typography gutterBottom>
                   Font Size: {codePosition.fontSize}px
@@ -361,7 +405,7 @@ function CreateTemplate() {
               disabled={!imageUrl}
               sx={{ mr: 2 }}
             >
-              Create Template
+              Save Changes
             </Button>
             <Button
               variant="outlined"
@@ -376,6 +420,6 @@ function CreateTemplate() {
   );
 }
 
-export default withPageRequiredAuth(CreateTemplate, {
+export default withPageRequiredAuth(EditTemplate, {
   roles: [RoleEnum.ADMIN],
 });

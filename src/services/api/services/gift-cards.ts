@@ -98,7 +98,7 @@ export function useGetGiftCardsByEmailService() {
 
 // --- Redeem (Admin) ---
 export type RedeemGiftCardRequest = {
-  amount: number;
+  amount?: number;
   notes?: string;
 };
 

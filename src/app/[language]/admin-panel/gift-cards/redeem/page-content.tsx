@@ -17,17 +17,25 @@ import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Box from "@mui/material/Box";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   useGetGiftCardByCodeService,
   useRedeemGiftCardService,
 } from "@/services/api/services/gift-cards";
+import { useGetGiftCardTemplateService } from "@/services/api/services/gift-card-templates";
 import HTTP_CODES_ENUM from "@/services/api/types/http-codes";
 import { GiftCard } from "@/services/api/types/gift-card";
+import { GiftCardTemplate } from "@/services/api/types/gift-card-template";
+import { useCurrency } from "@/services/currency/currency-provider";
 
 function RedeemPage() {
-  const [code, setCode] = useState("");
+  const { symbol: CURRENCY_SYMBOL } = useCurrency();
+  const searchParams = useSearchParams();
+  const initialCode = searchParams.get("code") || "";
+  const [code, setCode] = useState(initialCode);
   const [giftCard, setGiftCard] = useState<GiftCard | null>(null);
+  const [template, setTemplate] = useState<GiftCardTemplate | null>(null);
   const [amount, setAmount] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -36,17 +44,23 @@ function RedeemPage() {
 
   const lookupService = useGetGiftCardByCodeService();
   const redeemService = useRedeemGiftCardService();
+  const getTemplate = useGetGiftCardTemplateService();
+
+  const isFullRedemption = !template || template.redemptionType === "full";
 
   const handleLookup = useCallback(async () => {
     setError(null);
     setSuccess(null);
     setGiftCard(null);
+    setTemplate(null);
     if (!code.trim()) return;
     setLoading(true);
     try {
       const { status, data } = await lookupService(code.trim().toUpperCase());
       if (status === HTTP_CODES_ENUM.OK && data) {
         setGiftCard(data);
+        const { status: ts, data: td } = await getTemplate(data.templateId);
+        if (ts === HTTP_CODES_ENUM.OK) setTemplate(td);
       } else {
         setError("Gift card not found.");
       }
@@ -55,25 +69,40 @@ function RedeemPage() {
     } finally {
       setLoading(false);
     }
-  }, [code, lookupService]);
+  }, [code, lookupService, getTemplate]);
+
+  const didAutoLookup = useRef(false);
+  useEffect(() => {
+    if (initialCode && !didAutoLookup.current) {
+      didAutoLookup.current = true;
+      handleLookup();
+    }
+  }, [initialCode, handleLookup]);
 
   const handleRedeem = useCallback(async () => {
     if (!giftCard) return;
     setError(null);
     setSuccess(null);
-    const redeemAmount = parseFloat(amount);
-    if (isNaN(redeemAmount) || redeemAmount <= 0) {
-      setError("Enter a valid amount.");
-      return;
+
+    let redeemAmount: number;
+    if (isFullRedemption) {
+      redeemAmount = giftCard.currentBalance;
+    } else {
+      redeemAmount = parseFloat(amount);
+      if (isNaN(redeemAmount) || redeemAmount <= 0) {
+        setError("Enter a valid amount.");
+        return;
+      }
+      if (redeemAmount > giftCard.currentBalance) {
+        setError("Amount exceeds current balance.");
+        return;
+      }
     }
-    if (redeemAmount > giftCard.currentBalance) {
-      setError("Amount exceeds current balance.");
-      return;
-    }
+
     setLoading(true);
     try {
       const { status, data } = await redeemService(giftCard.id, {
-        amount: redeemAmount,
+        amount: isFullRedemption ? undefined : redeemAmount,
         notes: notes || undefined,
       });
       if (status === HTTP_CODES_ENUM.OK) {
@@ -81,7 +110,7 @@ function RedeemPage() {
         setAmount("");
         setNotes("");
         setSuccess(
-          `Redeemed $${redeemAmount.toFixed(2)}. Remaining balance: $${data.currentBalance.toFixed(2)}`
+          `Redeemed ${CURRENCY_SYMBOL}${redeemAmount.toFixed(2)}. Remaining balance: ${CURRENCY_SYMBOL}${data.currentBalance.toFixed(2)}`
         );
       }
     } catch {
@@ -89,7 +118,7 @@ function RedeemPage() {
     } finally {
       setLoading(false);
     }
-  }, [giftCard, amount, notes, redeemService]);
+  }, [giftCard, amount, notes, redeemService, isFullRedemption]);
 
   return (
     <Container maxWidth="md">
@@ -98,7 +127,6 @@ function RedeemPage() {
           <Typography variant="h4">Redeem Gift Card</Typography>
         </Grid>
 
-        {/* Lookup */}
         <Grid size={12}>
           <Paper sx={{ p: 3 }}>
             <Box sx={{ display: "flex", gap: 2 }}>
@@ -134,7 +162,6 @@ function RedeemPage() {
           </Grid>
         )}
 
-        {/* Gift Card Details */}
         {giftCard && (
           <>
             <Grid size={12}>
@@ -168,7 +195,8 @@ function RedeemPage() {
                       Original Amount
                     </Typography>
                     <Typography variant="h6">
-                      ${giftCard.originalAmount.toFixed(2)}
+                      {CURRENCY_SYMBOL}
+                      {giftCard.originalAmount.toFixed(2)}
                     </Typography>
                   </Grid>
                   <Grid size={4}>
@@ -183,7 +211,8 @@ function RedeemPage() {
                           : "text.secondary"
                       }
                     >
-                      ${giftCard.currentBalance.toFixed(2)}
+                      {CURRENCY_SYMBOL}
+                      {giftCard.currentBalance.toFixed(2)}
                     </Typography>
                   </Grid>
                   <Grid size={4}>
@@ -199,7 +228,9 @@ function RedeemPage() {
                     <>
                       <Divider sx={{ my: 3 }} />
                       <Typography variant="h6" gutterBottom>
-                        Redeem
+                        {isFullRedemption
+                          ? "Redeem Full Balance"
+                          : "Redeem Amount"}
                       </Typography>
                       <Box
                         sx={{
@@ -208,18 +239,20 @@ function RedeemPage() {
                           alignItems: "flex-start",
                         }}
                       >
-                        <TextField
-                          label="Amount"
-                          type="number"
-                          value={amount}
-                          onChange={(e) => setAmount(e.target.value)}
-                          inputProps={{
-                            min: 0.01,
-                            max: giftCard.currentBalance,
-                            step: 0.01,
-                          }}
-                          sx={{ width: 160 }}
-                        />
+                        {!isFullRedemption && (
+                          <TextField
+                            label="Amount"
+                            type="number"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            inputProps={{
+                              min: 0.01,
+                              max: giftCard.currentBalance,
+                              step: 0.01,
+                            }}
+                            sx={{ width: 160 }}
+                          />
+                        )}
                         <TextField
                           label="Notes (optional)"
                           value={notes}
@@ -233,15 +266,26 @@ function RedeemPage() {
                           disabled={loading}
                           sx={{ minWidth: 120, height: 56 }}
                         >
-                          Redeem
+                          {isFullRedemption
+                            ? `Redeem ${CURRENCY_SYMBOL}${giftCard.currentBalance.toFixed(2)}`
+                            : "Redeem"}
                         </Button>
                       </Box>
+                      {isFullRedemption && (
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ mt: 1, display: "block" }}
+                        >
+                          This gift card is single-use. The full balance will be
+                          redeemed.
+                        </Typography>
+                      )}
                     </>
                   )}
               </Paper>
             </Grid>
 
-            {/* Redemption History */}
             {giftCard.redemptions.length > 0 && (
               <Grid size={12}>
                 <Typography variant="h6" gutterBottom>
@@ -263,9 +307,13 @@ function RedeemPage() {
                           <TableCell>
                             {new Date(r.redeemedAt).toLocaleString()}
                           </TableCell>
-                          <TableCell>${r.amount.toFixed(2)}</TableCell>
                           <TableCell>
-                            ${r.remainingBalance.toFixed(2)}
+                            {CURRENCY_SYMBOL}
+                            {r.amount.toFixed(2)}
+                          </TableCell>
+                          <TableCell>
+                            {CURRENCY_SYMBOL}
+                            {r.remainingBalance.toFixed(2)}
                           </TableCell>
                           <TableCell>{r.notes || "-"}</TableCell>
                         </TableRow>

@@ -9,14 +9,16 @@ import Box from "@mui/material/Box";
 import Alert from "@mui/material/Alert";
 import LinearProgress from "@mui/material/LinearProgress";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useGetGiftCardByCodeService } from "@/services/api/services/gift-cards";
 import { useGetGiftCardTemplateService } from "@/services/api/services/gift-card-templates";
 import HTTP_CODES_ENUM from "@/services/api/types/http-codes";
 import { GiftCard } from "@/services/api/types/gift-card";
 import { GiftCardTemplate } from "@/services/api/types/gift-card-template";
+import { useCurrency } from "@/services/currency/currency-provider";
 
 export default function GiftCardView() {
+  const { symbol: CURRENCY_SYMBOL } = useCurrency();
   const params = useParams<{ code: string }>();
   const [giftCard, setGiftCard] = useState<GiftCard | null>(null);
   const [template, setTemplate] = useState<GiftCardTemplate | null>(null);
@@ -25,6 +27,15 @@ export default function GiftCardView() {
 
   const lookupByCode = useGetGiftCardByCodeService();
   const getTemplate = useGetGiftCardTemplateService();
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [scale, setScale] = useState(1);
+
+  const updateScale = useCallback(() => {
+    const img = imgRef.current;
+    if (img && img.naturalWidth > 0) {
+      setScale(img.clientWidth / img.naturalWidth);
+    }
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -51,6 +62,11 @@ export default function GiftCardView() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.code]);
+
+  useEffect(() => {
+    window.addEventListener("resize", updateScale);
+    return () => window.removeEventListener("resize", updateScale);
+  }, [updateScale]);
 
   const handlePrint = useCallback(() => {
     window.print();
@@ -85,9 +101,11 @@ export default function GiftCardView() {
               <Box sx={{ position: "relative" }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
+                  ref={imgRef}
                   src={template.image}
                   alt="Gift Card"
                   style={{ width: "100%", display: "block" }}
+                  onLoad={updateScale}
                 />
                 {template.codePosition && (
                   <Box
@@ -106,7 +124,8 @@ export default function GiftCardView() {
                   >
                     <Typography
                       sx={{
-                        fontSize: template.codePosition.fontSize || 16,
+                        fontSize:
+                          (template.codePosition.fontSize || 16) * scale,
                         color: template.codePosition.fontColor || "#000",
                         fontWeight: "bold",
                         whiteSpace: "nowrap",
@@ -129,7 +148,8 @@ export default function GiftCardView() {
                 {giftCard.code}
               </Typography>
               <Typography variant="h5" color="primary" gutterBottom>
-                ${giftCard.originalAmount.toFixed(2)}
+                {CURRENCY_SYMBOL}
+                {giftCard.originalAmount.toFixed(2)}
               </Typography>
               {giftCard.notes && (
                 <Typography

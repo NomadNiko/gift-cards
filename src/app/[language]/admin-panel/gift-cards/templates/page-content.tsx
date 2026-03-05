@@ -22,7 +22,6 @@ import { GiftCardTemplate } from "@/services/api/types/gift-card-template";
 import useConfirmDialog from "@/components/confirm-dialog/use-confirm-dialog";
 import LinearProgress from "@mui/material/LinearProgress";
 import Box from "@mui/material/Box";
-import useLanguage from "@/services/i18n/use-language";
 
 function TemplatesList() {
   const { data, hasNextPage, isFetchingNextPage, fetchNextPage, isLoading } =
@@ -30,7 +29,6 @@ function TemplatesList() {
   const deleteService = useDeleteGiftCardTemplateService();
   const queryClient = useQueryClient();
   const { confirmDialog } = useConfirmDialog();
-  const language = useLanguage();
 
   const templates = useMemo(() => {
     const result = data?.pages.flatMap((page) => page?.data || []) ?? [];
@@ -82,7 +80,7 @@ function TemplatesList() {
           <Button
             variant="contained"
             component={Link}
-            href={`/${language}/admin-panel/gift-cards/templates/create`}
+            href="/admin-panel/gift-cards/templates/create"
           >
             Create Template
           </Button>
@@ -123,6 +121,15 @@ function TemplatesList() {
                     color={template.isActive ? "success" : "default"}
                     size="small"
                   />
+                  <Chip
+                    label={
+                      template.redemptionType === "partial"
+                        ? "Partial"
+                        : "Single Use"
+                    }
+                    size="small"
+                    variant="outlined"
+                  />
                 </Box>
                 <Typography variant="body2" color="text.secondary" noWrap>
                   {template.description}
@@ -132,7 +139,7 @@ function TemplatesList() {
                 <Button
                   size="small"
                   component={Link}
-                  href={`/${language}/admin-panel/gift-cards/templates/${template.id}/edit`}
+                  href={`/admin-panel/gift-cards/templates/${template.id}/edit`}
                 >
                   Edit
                 </Button>

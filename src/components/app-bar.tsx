@@ -104,6 +104,14 @@ function ResponsiveAppBar() {
                 </Typography>
               </MenuItem>
 
+              <MenuItem
+                onClick={handleCloseNavMenu}
+                component={Link}
+                href="/gift-cards/balance"
+              >
+                <Typography textAlign="center">Check Balance</Typography>
+              </MenuItem>
+
               {!!user?.role &&
                 [RoleEnum.ADMIN].includes(Number(user?.role?.id)) && [
                   <MenuItem
@@ -147,6 +155,14 @@ function ResponsiveAppBar() {
                     href="/admin-panel/gift-cards/widgets"
                   >
                     <Typography textAlign="center">Widgets</Typography>
+                  </MenuItem>,
+                  <MenuItem
+                    key="settings"
+                    onClick={handleCloseNavMenu}
+                    component={Link}
+                    href="/admin-panel/gift-cards/settings"
+                  >
+                    <Typography textAlign="center">Settings</Typography>
                   </MenuItem>,
                   // mobile-menu-items
                 ]}
@@ -206,6 +222,15 @@ function ResponsiveAppBar() {
               {t("common:navigation.home")}
             </Button>
 
+            <Button
+              onClick={handleCloseNavMenu}
+              sx={{ my: 2, color: "white", display: "block" }}
+              component={Link}
+              href="/gift-cards/balance"
+            >
+              Check Balance
+            </Button>
+
             {!!user?.role &&
               [RoleEnum.ADMIN].includes(Number(user?.role?.id)) && (
                 <>
@@ -248,6 +273,14 @@ function ResponsiveAppBar() {
                     href="/admin-panel/gift-cards/widgets"
                   >
                     Widgets
+                  </Button>
+                  <Button
+                    onClick={handleCloseNavMenu}
+                    sx={{ my: 2, color: "white", display: "block" }}
+                    component={Link}
+                    href="/admin-panel/gift-cards/settings"
+                  >
+                    Settings
                   </Button>
                   {/* desktop-menu-items */}
                 </>
