@@ -127,7 +127,7 @@ function WidgetDemo() {
   if (!widget) return null;
 
   const embedCode = `<div id="gift-card-widget-${widget.apiKey}"></div>
-<script src="https://gift-cards-server.nomadsoft.us/api/v1/widgets/loader/${widget.apiKey}/widget.js"></script>`;
+<script src="${process.env.NEXT_PUBLIC_API_URL}/v1/widgets/loader/${widget.apiKey}/widget.js"></script>`;
 
   return (
     <Container maxWidth="lg">

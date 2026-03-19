@@ -372,7 +372,7 @@ function SettingsPage() {
                       onChange={(e) => setStripeWebhookSecret(e.target.value)}
                       fullWidth
                       type="password"
-                      helperText="Starts with whsec_. Set your webhook endpoint to: https://gift-cards-server.nomadsoft.us/api/v1/gift-cards/stripe-webhook"
+                      helperText={`Starts with whsec_. Set your webhook endpoint to: ${process.env.NEXT_PUBLIC_API_URL}/v1/gift-cards/stripe-webhook`}
                     />
                   </Box>
                 )}

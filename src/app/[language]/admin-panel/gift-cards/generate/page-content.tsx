@@ -50,7 +50,7 @@ function GenerateGiftCard() {
         templateId,
         originalAmount: parseFloat(amount),
         purchaserName: fromName,
-        purchaserEmail: recipientEmail || "noreply@gift-cards.nomadsoft.us",
+        purchaserEmail: recipientEmail || "noreply@generated.local",
         recipientName: recipientName || undefined,
         recipientEmail: recipientEmail || undefined,
         notes: notes || undefined,
