@@ -163,3 +163,21 @@ export function useCancelGiftCardService() {
     [fetch]
   );
 }
+
+// --- Unredeem (Admin) ---
+export function useUnredeemGiftCardService() {
+  const fetch = useFetch();
+  return useCallback(
+    (
+      id: string,
+      data: { redemptionId: string },
+      requestConfig?: RequestConfigType
+    ) =>
+      fetch(`${API_URL}/v1/gift-cards/${id}/unredeem`, {
+        method: "POST",
+        body: JSON.stringify(data),
+        ...requestConfig,
+      }).then(wrapperFetchJsonResponse<GiftCard>),
+    [fetch]
+  );
+}

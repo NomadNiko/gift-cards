@@ -5,6 +5,9 @@ export interface Redemption {
   redeemedAt: string;
   notes?: string;
   remainingBalance: number;
+  reversed?: boolean;
+  reversedAt?: string;
+  reversedBy?: string;
 }
 
 export interface GiftCard {

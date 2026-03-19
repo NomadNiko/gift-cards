@@ -17,11 +17,19 @@ import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Box from "@mui/material/Box";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+import UndoIcon from "@mui/icons-material/Undo";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   useGetGiftCardByCodeService,
   useRedeemGiftCardService,
+  useUnredeemGiftCardService,
 } from "@/services/api/services/gift-cards";
 import { useGetGiftCardTemplateService } from "@/services/api/services/gift-card-templates";
 import HTTP_CODES_ENUM from "@/services/api/types/http-codes";
@@ -44,9 +52,15 @@ function RedeemPage() {
 
   const lookupService = useGetGiftCardByCodeService();
   const redeemService = useRedeemGiftCardService();
+  const unredeemService = useUnredeemGiftCardService();
   const getTemplate = useGetGiftCardTemplateService();
 
   const isFullRedemption = !template || template.redemptionType === "full";
+
+  const [confirmUnredeem, setConfirmUnredeem] = useState<{
+    id: string;
+    amount: number;
+  } | null>(null);
 
   const handleLookup = useCallback(async () => {
     setError(null);
@@ -119,6 +133,29 @@ function RedeemPage() {
       setLoading(false);
     }
   }, [giftCard, amount, notes, redeemService, isFullRedemption]);
+
+  const handleUnredeem = useCallback(async () => {
+    if (!giftCard || !confirmUnredeem) return;
+    setError(null);
+    setSuccess(null);
+    setLoading(true);
+    try {
+      const { status, data } = await unredeemService(giftCard.id, {
+        redemptionId: confirmUnredeem.id,
+      });
+      if (status === HTTP_CODES_ENUM.OK) {
+        setGiftCard(data);
+        setSuccess(
+          `Reversed ${CURRENCY_SYMBOL}${confirmUnredeem.amount.toFixed(2)}. Balance restored to ${CURRENCY_SYMBOL}${data.currentBalance.toFixed(2)}`
+        );
+      }
+    } catch {
+      setError("Failed to reverse redemption.");
+    } finally {
+      setLoading(false);
+      setConfirmUnredeem(null);
+    }
+  }, [giftCard, confirmUnredeem, unredeemService, CURRENCY_SYMBOL]);
 
   return (
     <Container maxWidth="md">
@@ -320,11 +357,23 @@ function RedeemPage() {
                         >
                           Notes
                         </TableCell>
+                        <TableCell
+                          sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
+                        >
+                          Status
+                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {giftCard.redemptions.map((r) => (
-                        <TableRow key={r.id}>
+                        <TableRow
+                          key={r.id}
+                          sx={
+                            r.reversed
+                              ? { opacity: 0.5, textDecoration: "line-through" }
+                              : undefined
+                          }
+                        >
                           <TableCell
                             sx={{ fontSize: { xs: "0.7rem", sm: "0.875rem" } }}
                           >
@@ -347,6 +396,26 @@ function RedeemPage() {
                           >
                             {r.notes || "-"}
                           </TableCell>
+                          <TableCell>
+                            {r.reversed ? (
+                              <Chip label="Reversed" size="small" />
+                            ) : (
+                              <Tooltip title="Undo this redemption">
+                                <IconButton
+                                  size="small"
+                                  color="warning"
+                                  onClick={() =>
+                                    setConfirmUnredeem({
+                                      id: r.id,
+                                      amount: r.amount,
+                                    })
+                                  }
+                                >
+                                  <UndoIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -357,6 +426,25 @@ function RedeemPage() {
           </>
         )}
       </Grid>
+
+      <Dialog open={!!confirmUnredeem} onClose={() => setConfirmUnredeem(null)}>
+        <DialogTitle>Reverse Redemption</DialogTitle>
+        <DialogContent>
+          Restore {CURRENCY_SYMBOL}
+          {confirmUnredeem?.amount.toFixed(2)} to this gift card&apos;s balance?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmUnredeem(null)}>Cancel</Button>
+          <Button
+            onClick={handleUnredeem}
+            variant="contained"
+            color="warning"
+            disabled={loading}
+          >
+            Reverse
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }
