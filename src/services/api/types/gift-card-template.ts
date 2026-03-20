@@ -14,6 +14,7 @@ export interface GiftCardTemplate {
   codePosition: CodePosition;
   redemptionType: "partial" | "full";
   expirationDate?: string;
+  expirationMonths?: number;
   codePrefix: string;
   qrPosition?: QrPosition;
   isActive: boolean;

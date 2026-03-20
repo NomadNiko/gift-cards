@@ -142,6 +142,13 @@ function TemplatesList() {
                       }
                     />
                   )}
+                  {!template.expirationDate && template.expirationMonths && (
+                    <Chip
+                      label={`Exp: +${template.expirationMonths}mo`}
+                      size="small"
+                      variant="outlined"
+                    />
+                  )}
                 </Box>
                 <Typography variant="body2" color="text.secondary" noWrap>
                   {template.description}

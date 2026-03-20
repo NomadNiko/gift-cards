@@ -76,9 +76,17 @@ export default function GiftCardView() {
     [currencyCode]
   );
 
-  const expirationLabel = template?.expirationDate
-    ? `EXP: ${formatExpDate(template.expirationDate)}`
-    : "EXP: Never";
+  const expirationLabel = (() => {
+    if (template?.expirationMonths && giftCard) {
+      const d = new Date(giftCard.purchaseDate);
+      d.setMonth(d.getMonth() + template.expirationMonths);
+      return `EXP: ${formatExpDate(d.toISOString())}`;
+    }
+    if (template?.expirationDate) {
+      return `EXP: ${formatExpDate(template.expirationDate)}`;
+    }
+    return "EXP: Never";
+  })();
 
   const handlePrint = useCallback(() => {
     window.print();

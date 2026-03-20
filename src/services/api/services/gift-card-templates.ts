@@ -14,7 +14,8 @@ export type CreateGiftCardTemplateRequest = {
   image: string;
   codePosition: CodePosition;
   redemptionType?: "partial" | "full";
-  expirationDate?: string;
+  expirationDate?: string | null;
+  expirationMonths?: number | null;
   codePrefix?: string;
   qrPosition?: QrPosition;
   isActive?: boolean;

@@ -36,6 +36,8 @@ type FormData = {
   isActive: boolean;
   redemptionType: "partial" | "full";
   expirationDate: string;
+  expirationMonths: string;
+  expirationType: "none" | "fixed" | "relative";
   codePrefix: string;
 };
 
@@ -82,23 +84,32 @@ function EditTemplate() {
       isActive: true,
       redemptionType: "full" as const,
       expirationDate: "",
+      expirationMonths: "",
+      expirationType: "none" as const,
       codePrefix: "GC",
     },
   });
 
   const watchedExpDate = useWatch({ control, name: "expirationDate" });
+  const watchedExpType = useWatch({ control, name: "expirationType" });
+  const watchedExpMonths = useWatch({ control, name: "expirationMonths" });
   const watchedPrefix = useWatch({ control, name: "codePrefix" });
   const { code: currencyCode } = useCurrency();
 
   const expirationLabel = (() => {
-    if (!watchedExpDate) return "EXP: Never";
-    const d = new Date(watchedExpDate);
-    const dd = String(d.getDate()).padStart(2, "0");
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const yyyy = d.getFullYear();
-    return currencyCode === "USD"
-      ? `EXP: ${mm}/${dd}/${yyyy}`
-      : `EXP: ${dd}/${mm}/${yyyy}`;
+    if (watchedExpType === "relative" && watchedExpMonths) {
+      return `EXP: +${watchedExpMonths}mo`;
+    }
+    if (watchedExpType === "fixed" && watchedExpDate) {
+      const d = new Date(watchedExpDate);
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      return currencyCode === "USD"
+        ? `EXP: ${mm}/${dd}/${yyyy}`
+        : `EXP: ${dd}/${mm}/${yyyy}`;
+    }
+    return "EXP: Never";
   })();
 
   useEffect(() => {
@@ -112,8 +123,16 @@ function EditTemplate() {
             description: data.description,
             isActive: data.isActive,
             redemptionType: data.redemptionType || "full",
+            expirationType: data.expirationMonths
+              ? "relative"
+              : data.expirationDate
+                ? "fixed"
+                : "none",
             expirationDate: data.expirationDate
               ? data.expirationDate.split("T")[0]
+              : "",
+            expirationMonths: data.expirationMonths
+              ? String(data.expirationMonths)
               : "",
             codePrefix: data.codePrefix || "GC",
           });
@@ -215,7 +234,14 @@ function EditTemplate() {
         image: imageUrl,
         codePosition,
         redemptionType: formData.redemptionType,
-        expirationDate: formData.expirationDate || undefined,
+        expirationDate:
+          formData.expirationType === "fixed" && formData.expirationDate
+            ? formData.expirationDate
+            : null,
+        expirationMonths:
+          formData.expirationType === "relative" && formData.expirationMonths
+            ? parseInt(formData.expirationMonths, 10)
+            : null,
         codePrefix: formData.codePrefix || "GC",
         qrPosition,
         isActive: formData.isActive,
@@ -302,20 +328,65 @@ function EditTemplate() {
 
           <Grid size={{ xs: 12, md: 6 }}>
             <Controller
-              name="expirationDate"
+              name="expirationType"
               control={control}
               render={({ field }) => (
                 <TextField
                   {...field}
-                  type="date"
-                  label="Expiration Date"
+                  select
+                  label="Expiration"
                   fullWidth
-                  InputLabelProps={{ shrink: true }}
-                  helperText="Leave empty for no expiration"
-                />
+                  helperText={
+                    field.value === "none"
+                      ? "Gift cards never expire"
+                      : field.value === "fixed"
+                        ? "All cards expire on a specific date"
+                        : "Each card expires relative to its purchase date"
+                  }
+                >
+                  <MenuItem value="none">No Expiration</MenuItem>
+                  <MenuItem value="fixed">Fixed Date</MenuItem>
+                  <MenuItem value="relative">Months After Purchase</MenuItem>
+                </TextField>
               )}
             />
           </Grid>
+
+          {watchedExpType === "fixed" && (
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Controller
+                name="expirationDate"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    type="date"
+                    label="Expiration Date"
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                  />
+                )}
+              />
+            </Grid>
+          )}
+
+          {watchedExpType === "relative" && (
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Controller
+                name="expirationMonths"
+                control={control}
+                render={({ field }) => (
+                  <TextField {...field} select label="Expires After" fullWidth>
+                    <MenuItem value="1">1 Month</MenuItem>
+                    <MenuItem value="3">3 Months</MenuItem>
+                    <MenuItem value="6">6 Months</MenuItem>
+                    <MenuItem value="12">12 Months</MenuItem>
+                    <MenuItem value="24">24 Months</MenuItem>
+                  </TextField>
+                )}
+              />
+            </Grid>
+          )}
 
           <Grid size={{ xs: 12, md: 6 }}>
             <Controller
