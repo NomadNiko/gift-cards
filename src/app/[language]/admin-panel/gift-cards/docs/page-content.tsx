@@ -30,8 +30,8 @@ type Section =
 const sections: { id: Section; label: string; badge?: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "balance", label: "Check Balance" },
-  { id: "redeem", label: "Redeem Gift Cards" },
-  { id: "generate", label: "Generate Gift Cards" },
+  { id: "redeem", label: "Redeem Gift Vouchers" },
+  { id: "generate", label: "Generate Gift Vouchers" },
   { id: "purchases", label: "View Purchases" },
   { id: "templates", label: "Templates", badge: "Admin" },
   { id: "widgets", label: "Widgets", badge: "Admin" },
@@ -97,7 +97,7 @@ function OverviewSection() {
     <>
       <SectionTitle>Overview</SectionTitle>
       <P>
-        This application manages the full lifecycle of gift cards — from
+        This application manages the full lifecycle of gift vouchers — from
         creating templates and selling cards through your website, to redeeming
         them in-house and tracking every transaction.
       </P>
@@ -111,8 +111,8 @@ function OverviewSection() {
           Staff
         </Typography>
         <Typography variant="body2">
-          Can check balances, redeem gift cards, generate complimentary cards,
-          view all purchases, and access this documentation. Ideal for
+          Can check balances, redeem gift vouchers, generate complimentary
+          cards, view all purchases, and access this documentation. Ideal for
           front-of-house team members.
         </Typography>
       </Paper>
@@ -129,12 +129,12 @@ function OverviewSection() {
       <Sub>Navigation</Sub>
       <P>
         The top navigation bar organises features into dropdown menus. Staff
-        members see the Card Status and Manage menus. Admins additionally see
+        members see the Voucher Status and Manage menus. Admins additionally see
         the Admin menu.
       </P>
-      <Img alt="Navigation bar showing Card Status, Manage, and Admin dropdown menus" />
+      <Img alt="Navigation bar showing Voucher Status, Manage, and Admin dropdown menus" />
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-        <Typography variant="subtitle2">Card Status</Typography>
+        <Typography variant="subtitle2">Voucher Status</Typography>
         <Typography variant="body2">
           Check Balance — available to everyone including customers. Redeem —
           staff and admin only.
@@ -153,10 +153,10 @@ function OverviewSection() {
       </Paper>
       <Sub>QR Code Scanning</Sub>
       <P>
-        Every gift card has a QR code. When scanned, it automatically routes the
-        user to the appropriate page: staff and admin users are taken directly
-        to the Redeem page with the code pre-filled; customers are taken to the
-        Balance page.
+        Every gift voucher has a QR code. When scanned, it automatically routes
+        the user to the appropriate page: staff and admin users are taken
+        directly to the Redeem page with the code pre-filled; customers are
+        taken to the Balance page.
       </P>
     </>
   );
@@ -168,14 +168,14 @@ function BalanceSection() {
       <SectionTitle>Check Balance</SectionTitle>
       <P>
         The Balance page is publicly accessible — customers can use it without
-        logging in. Navigate to Card Status → Check Balance, or visit the
+        logging in. Navigate to Voucher Status → Check Balance, or visit the
         /gift-cards/balance URL directly.
       </P>
       <Img alt="Balance lookup page with search field and results" />
-      <Sub>Looking Up a Gift Card</Sub>
+      <Sub>Looking Up a Gift Voucher</Sub>
       <Step n={1}>
-        Enter the gift card code (e.g. THW-XXXX-XXXX) or the purchaser/recipient
-        email address into the search field.
+        Enter the gift voucher code (e.g. THW-XXXX-XXXX) or the
+        purchaser/recipient email address into the search field.
       </Step>
       <Step n={2}>Press Enter or click Search.</Step>
       <Step n={3}>
@@ -185,7 +185,7 @@ function BalanceSection() {
       <Sub>Search by Email</Sub>
       <P>
         If an email address is entered instead of a code, the system returns all
-        gift cards associated with that email. This is useful when a customer
+        gift vouchers associated with that email. This is useful when a customer
         has lost their code but knows the email used at purchase.
       </P>
       <Sub>Auto-Lookup via URL</Sub>
@@ -226,16 +226,17 @@ function BalanceSection() {
 function RedeemSection() {
   return (
     <>
-      <SectionTitle>Redeem Gift Cards</SectionTitle>
+      <SectionTitle>Redeem Gift Vouchers</SectionTitle>
       <P>
-        Navigate to Card Status → Redeem. This page is available to Staff and
+        Navigate to Voucher Status → Redeem. This page is available to Staff and
         Admin users.
       </P>
-      <Img alt="Redeem page showing code lookup field and gift card details" />
+      <Img alt="Redeem page showing code lookup field and gift voucher details" />
       <Sub>Looking Up a Card</Sub>
       <Step n={1}>
-        Enter the gift card code in the lookup field. You can type it manually
-        or scan the QR code (which opens this page with the code pre-filled).
+        Enter the gift voucher code in the lookup field. You can type it
+        manually or scan the QR code (which opens this page with the code
+        pre-filled).
       </Step>
       <Step n={2}>Click Lookup or press Enter.</Step>
       <Step n={3}>
@@ -245,7 +246,7 @@ function RedeemSection() {
       <Img alt="Gift card details panel showing code, status, amounts, and purchaser" />
       <Sub>Redemption Types</Sub>
       <P>
-        The redemption behaviour depends on the template the gift card was
+        The redemption behaviour depends on the template the gift voucher was
         created from:
       </P>
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
@@ -317,14 +318,14 @@ function RedeemSection() {
 function GenerateSection() {
   return (
     <>
-      <SectionTitle>Generate Gift Cards</SectionTitle>
+      <SectionTitle>Generate Gift Vouchers</SectionTitle>
       <P>
-        Navigate to Manage → Generate. This creates a gift card without
+        Navigate to Manage → Generate. This creates a gift voucher without
         requiring a customer purchase — useful for complimentary gifts,
         promotions, or replacements.
       </P>
-      <Img alt="Generate gift card form with template, amount, sender, and recipient fields" />
-      <Sub>Creating a Complimentary Gift Card</Sub>
+      <Img alt="Generate gift voucher form with template, amount, sender, and recipient fields" />
+      <Sub>Creating a Complimentary Gift Voucher</Sub>
       <Step n={1}>
         Select a Template from the dropdown. Only active templates appear.
       </Step>
@@ -332,24 +333,24 @@ function GenerateSection() {
         Enter the Amount. Minimum is 1 in your configured currency.
       </Step>
       <Step n={3}>
-        Enter the From (sender name) — this appears on the gift card and in
+        Enter the From (sender name) — this appears on the gift voucher and in
         emails. For house-generated cards, use your business name.
       </Step>
       <Step n={4}>
         Optionally enter a Recipient Name and Recipient Email. If an email is
-        provided, the gift card PDF will be emailed to that address
+        provided, the gift voucher PDF will be emailed to that address
         automatically.
       </Step>
       <Step n={5}>
-        Optionally add a Personal Message — this appears on the gift card as an
-        italicised quote.
+        Optionally add a Personal Message — this appears on the gift voucher as
+        an italicised quote.
       </Step>
-      <Step n={6}>Click Generate Gift Card.</Step>
+      <Step n={6}>Click Generate Gift Voucher.</Step>
       <Step n={7}>
         A success message shows the generated code and confirms whether an email
         was sent.
       </Step>
-      <Img alt="Success message showing generated gift card code" />
+      <Img alt="Success message showing generated gift voucher code" />
       <Alert severity="info" sx={{ my: 2 }}>
         Generated cards work identically to purchased cards. They appear in the
         Purchases list and can be redeemed, cancelled, and looked up the same
@@ -364,8 +365,8 @@ function PurchasesSection() {
     <>
       <SectionTitle>View Purchases</SectionTitle>
       <P>
-        Navigate to Manage → Purchases. This page shows every gift card in the
-        system — both customer purchases and staff-generated cards.
+        Navigate to Manage → Purchases. This page shows every gift voucher in
+        the system — both customer purchases and staff-generated cards.
       </P>
       <Img alt="Purchases table showing code, amount, balance, purchaser, date, status columns" />
       <Sub>Desktop View</Sub>
@@ -381,17 +382,17 @@ function PurchasesSection() {
       </P>
       <Sub>Mobile View</Sub>
       <P>
-        On smaller screens, each gift card displays as a compact card with all
-        the same information. A Sort By dropdown at the top lets you choose the
-        sort field and direction.
+        On smaller screens, each gift voucher displays as a compact card with
+        all the same information. A Sort By dropdown at the top lets you choose
+        the sort field and direction.
       </P>
       <Img alt="Mobile card layout with sort dropdown" />
       <Sub>Actions</Sub>
-      <P>Each gift card row has two action buttons:</P>
+      <P>Each gift voucher row has two action buttons:</P>
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Typography variant="subtitle2">View</Typography>
         <Typography variant="body2">
-          Opens the public gift card view page showing the full card with
+          Opens the public gift voucher view page showing the full card with
           template image, code overlay, QR code, amount, balance, and a Print
           button. This is the same page customers see.
         </Typography>
@@ -403,9 +404,9 @@ function PurchasesSection() {
           immediate lookup.
         </Typography>
       </Paper>
-      <Sub>Gift Card View Page</Sub>
+      <Sub>Gift Voucher View Page</Sub>
       <P>
-        The View page displays the gift card exactly as the customer receives
+        The View page displays the gift voucher exactly as the customer receives
         it: the template image with the code and expiration overlaid in the
         configured position, the QR code in its configured position, the amount,
         balance, recipient name, and personal message.
@@ -413,7 +414,7 @@ function PurchasesSection() {
       <Img alt="Gift card view page with template image, code overlay, QR code, and details" />
       <P>
         The Print button at the top opens the browser print dialog with a
-        print-optimised layout — only the gift card is printed, without
+        print-optimised layout — only the gift voucher is printed, without
         navigation or other page elements.
       </P>
     </>
@@ -426,7 +427,8 @@ function TemplatesSection() {
       <SectionTitle>Templates (Admin Only)</SectionTitle>
       <P>
         Navigate to Manage → Templates. Templates define the visual design and
-        behaviour of gift cards. Every gift card is created from a template.
+        behaviour of gift vouchers. Every gift voucher is created from a
+        template.
       </P>
       <Img alt="Templates list page showing template cards with image previews" />
       <Sub>Template List</Sub>
@@ -505,7 +507,7 @@ function TemplatesSection() {
         unless you reposition them.
       </P>
       <Alert severity="info" sx={{ my: 2 }}>
-        Changing a template does not affect gift cards that have already been
+        Changing a template does not affect gift vouchers that have already been
         created from it. Existing cards retain the image and positions they were
         generated with. Only new cards will use the updated template.
       </Alert>
@@ -522,8 +524,9 @@ function TemplatesSection() {
       <Sub>Deleting a Template</Sub>
       <P>
         Click Delete on a template card. A confirmation dialog appears. Deleting
-        a template does not delete gift cards that were created from it — those
-        cards continue to work, but their view page may show a missing image.
+        a template does not delete gift vouchers that were created from it —
+        those cards continue to work, but their view page may show a missing
+        image.
       </P>
     </>
   );
@@ -535,7 +538,7 @@ function WidgetsSection() {
       <SectionTitle>Widgets (Admin Only)</SectionTitle>
       <P>
         Navigate to Manage → Widgets. Widgets are embeddable purchase forms that
-        you place on your website so customers can buy gift cards directly.
+        you place on your website so customers can buy gift vouchers directly.
       </P>
       <Img alt="Widgets list page showing widget cards with name, API key, and action buttons" />
       <Sub>Widget List</Sub>
@@ -549,8 +552,8 @@ function WidgetsSection() {
         Click Create Widget. Enter a Widget Name (internal label).
       </Step>
       <Step n={2}>
-        Select a Template — this determines which gift card design is used for
-        purchases through this widget.
+        Select a Template — this determines which gift voucher design is used
+        for purchases through this widget.
       </Step>
       <Step n={3}>
         Customise the widget appearance using the colour pickers: Primary Button
@@ -558,8 +561,8 @@ function WidgetsSection() {
         Color, Field Text Color. A live preview updates as you change colours.
       </Step>
       <Step n={4}>
-        Set the Button Text (default: &quot;Buy Gift Card&quot;) and optionally
-        a Title Display and Header/Footer text.
+        Set the Button Text (default: &quot;Buy Gift Voucher&quot;) and
+        optionally a Title Display and Header/Footer text.
       </Step>
       <Step n={5}>
         Set the Redirect URL — this is the page where the widget is embedded.
@@ -619,7 +622,7 @@ function SettingsSection() {
       </P>
       <Sub>Payment Mode</Sub>
       <P>
-        Sandbox mode creates gift cards immediately without processing real
+        Sandbox mode creates gift vouchers immediately without processing real
         payments — useful for testing. Production mode processes real payments
         through your chosen payment gateway.
       </P>
@@ -647,22 +650,22 @@ function SettingsSection() {
       <Img alt="Squarespace gateway configuration with API key, polling interval, and pay links" />
       <Sub>Squarespace Pay Links</Sub>
       <P>
-        Pay links connect Squarespace products to gift card templates. When a
+        Pay links connect Squarespace products to gift voucher templates. When a
         customer purchases a product on Squarespace whose name matches a pay
-        link, the system automatically creates a gift card using the linked
+        link, the system automatically creates a gift voucher using the linked
         template.
       </P>
       <Step n={1}>Click Add Pay Link.</Step>
       <Step n={2}>
         Enter a Display Name (internal label), the exact Squarespace Product
         Name (must match exactly as it appears in Squarespace), and select a
-        Gift Card Template.
+        Gift Voucher Template.
       </Step>
       <Step n={3}>Click Add.</Step>
       <Alert severity="warning" sx={{ my: 2 }}>
         Each pay link product name must be unique and must not be a substring of
-        another. For example, do not create both &quot;Gift Cards&quot; and
-        &quot;Buy Gift Cards&quot;.
+        another. For example, do not create both &quot;Gift Vouchers&quot; and
+        &quot;Buy Gift Vouchers&quot;.
       </Alert>
       <Sub>Notification Email List</Sub>
       <P>
@@ -701,7 +704,7 @@ function UsersSection() {
         <Typography variant="subtitle2">User (Role 2)</Typography>
         <Typography variant="body2">
           Standard user with no admin panel access. Can only use public pages
-          (balance lookup, gift card view).
+          (balance lookup, gift voucher view).
         </Typography>
       </Paper>
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
@@ -792,7 +795,7 @@ function DeveloperSection() {
 │   │   │       └── widgets/      # Widget CRUD (admin)
 │   │   └── gift-cards/
 │   │       ├── balance/          # Public balance lookup
-│   │       ├── view/[code]/      # Public gift card view
+│   │       ├── view/[code]/      # Public gift voucher view
 │   │       └── qr/[code]/        # QR redirect handler
 │   ├── components/
 │   │   ├── app-bar.tsx           # Main navigation
@@ -805,7 +808,7 @@ function DeveloperSection() {
 
 /var/www/gift-cards-server/       # Backend (NestJS)
 ├── src/
-│   ├── gift-cards/               # Core gift card module
+│   ├── gift-cards/               # Core gift voucher module
 │   │   ├── domain/               # GiftCard & Redemption entities
 │   │   ├── dto/                  # Create, Redeem, Query DTOs
 │   │   ├── infrastructure/       # MongoDB repository & schema
@@ -932,7 +935,7 @@ export default withPageRequiredAuth(MyPage, {
 });`}</pre>
       </Paper>
 
-      <Sub>Gift Card Lifecycle</Sub>
+      <Sub>Gift Voucher Lifecycle</Sub>
       <P>The complete flow from purchase to redemption:</P>
       <Step n={1}>
         Purchase triggered via: widget (Stripe checkout or sandbox), Squarespace
@@ -989,7 +992,7 @@ export default withPageRequiredAuth(MyPage, {
       <P>
         The /gift-cards/stripe-webhook endpoint receives
         checkout.session.completed events, extracts the metadata, and calls
-        GiftCardsService.purchase() to create the gift card.
+        GiftCardsService.purchase() to create the gift voucher.
       </P>
 
       <Sub>Email System</Sub>
@@ -999,7 +1002,7 @@ export default withPageRequiredAuth(MyPage, {
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Typography variant="body2" component="div">
           <strong>gift-card-purchase.hbs</strong> — Sent to the purchaser with
-          the gift card PDF attached.
+          the gift voucher PDF attached.
           <br />
           <strong>gift-card-recipient.hbs</strong> — Sent to the recipient (if
           different from purchaser) with the PDF.
@@ -1017,7 +1020,7 @@ export default withPageRequiredAuth(MyPage, {
       <Sub>API Endpoints Reference</Sub>
       <Paper sx={{ p: 2, mb: 2, overflow: "auto" }}>
         <Typography variant="subtitle2" gutterBottom>
-          Gift Cards (/api/v1/gift-cards)
+          Gift Vouchers (/api/v1/gift-cards)
         </Typography>
         <Typography
           variant="body2"
@@ -1243,8 +1246,8 @@ pm2 restart hurstwood-gift-cards
         <Typography variant="subtitle2">Emails not sending</Typography>
         <Typography variant="body2">
           Check SMTP configuration in the backend .env file. The mail service
-          catches and logs errors silently to avoid blocking gift card creation.
-          Check PM2 logs for mail-related errors.
+          catches and logs errors silently to avoid blocking gift voucher
+          creation. Check PM2 logs for mail-related errors.
         </Typography>
       </Paper>
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
@@ -1292,7 +1295,7 @@ function DocsPage() {
         <Grid size={12}>
           <Typography variant="h4">Documentation</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Complete guide to using the gift card management system.
+            Complete guide to using the gift voucher management system.
           </Typography>
         </Grid>
 

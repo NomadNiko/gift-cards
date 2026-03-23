@@ -17,6 +17,8 @@ export interface GiftCardTemplate {
   expirationMonths?: number;
   codePrefix: string;
   qrPosition?: QrPosition;
+  adminFeeType?: "none" | "fixed" | "percentage";
+  adminFeeValue?: number;
   isActive: boolean;
   createdBy: string;
   createdAt: string;

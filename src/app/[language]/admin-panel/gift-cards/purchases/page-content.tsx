@@ -23,15 +23,30 @@ import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import LinearProgress from "@mui/material/LinearProgress";
+import Switch from "@mui/material/Switch";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import Link from "@/components/link";
 import { useGetGiftCardsQuery } from "./queries/queries";
 import removeDuplicatesFromArrayObjects from "@/services/helpers/remove-duplicates-from-array-of-objects";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { GiftCard } from "@/services/api/types/gift-card";
 import { SortEnum } from "@/services/api/types/sort-type";
 import { useCurrency } from "@/services/currency/currency-provider";
+import {
+  useArchiveGiftCardService,
+  useUnarchiveGiftCardService,
+  useResendGiftCardEmailService,
+} from "@/services/api/services/gift-cards";
+import { useQueryClient } from "@tanstack/react-query";
+import { giftCardsQueryKeys } from "./queries/queries";
+import useAuth from "@/services/auth/use-auth";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogActions from "@mui/material/DialogActions";
 
 type SortableField = "code" | "purchaserName" | "purchaseDate";
 
@@ -82,9 +97,29 @@ function PurchasesList() {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [orderBy, setOrderBy] = useState<SortableField>("purchaseDate");
   const [order, setOrder] = useState<SortEnum>(SortEnum.DESC);
+  const [showArchived, setShowArchived] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [confirmTarget, setConfirmTarget] = useState<{
+    id: string;
+    code: string;
+    archive: boolean;
+  } | null>(null);
+  const [resendTarget, setResendTarget] = useState<{
+    id: string;
+    code: string;
+    email: string;
+  } | null>(null);
+
+  const { user } = useAuth();
+  const isAdmin = !!user?.role && Number(user.role.id) === RoleEnum.ADMIN;
+
+  const queryClient = useQueryClient();
+  const archiveService = useArchiveGiftCardService();
+  const unarchiveService = useUnarchiveGiftCardService();
+  const resendEmailService = useResendGiftCardEmailService();
 
   const { data, hasNextPage, isFetchingNextPage, fetchNextPage, isLoading } =
-    useGetGiftCardsQuery();
+    useGetGiftCardsQuery({ isArchived: showArchived || undefined });
 
   const giftCards = useMemo(() => {
     const result = data?.pages.flatMap((page) => page?.data || []) ?? [];
@@ -111,14 +146,67 @@ function PurchasesList() {
     setOrder(o === "asc" ? SortEnum.ASC : SortEnum.DESC);
   };
 
-  const isRedeemable = (gc: GiftCard) =>
-    gc.status === "active" || gc.status === "partially_redeemed";
+  const handleArchiveToggle = useCallback(
+    async (id: string, archive: boolean) => {
+      await (archive ? archiveService(id) : unarchiveService(id));
+      queryClient.invalidateQueries({
+        queryKey: giftCardsQueryKeys.list().key,
+      });
+      setConfirmTarget(null);
+    },
+    [archiveService, unarchiveService, queryClient]
+  );
+
+  const handleResendEmail = useCallback(
+    async (id: string) => {
+      await resendEmailService(id);
+      setResendTarget(null);
+    },
+    [resendEmailService]
+  );
 
   return (
     <Container maxWidth="lg">
       <Grid container spacing={3} pt={3}>
         <Grid size={12}>
-          <Typography variant="h4">Gift Card Purchases</Typography>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Typography variant="h4">Gift Voucher Purchases</Typography>
+            {isAdmin && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                {editMode && (
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={showArchived}
+                        onChange={(e) => setShowArchived(e.target.checked)}
+                        size="small"
+                      />
+                    }
+                    label="Show Archived"
+                  />
+                )}
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={editMode}
+                      onChange={(e) => {
+                        setEditMode(e.target.checked);
+                        if (!e.target.checked) setShowArchived(false);
+                      }}
+                      size="small"
+                    />
+                  }
+                  label="Edit"
+                />
+              </Box>
+            )}
+          </Box>
         </Grid>
 
         {isLoading && (
@@ -216,6 +304,35 @@ function PurchasesList() {
                     >
                       Redeem
                     </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() =>
+                        setResendTarget({
+                          id: gc.id,
+                          code: gc.code,
+                          email: gc.purchaserEmail,
+                        })
+                      }
+                    >
+                      Resend
+                    </Button>
+                    {editMode && (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color={showArchived ? "primary" : "warning"}
+                        onClick={() =>
+                          setConfirmTarget({
+                            id: gc.id,
+                            code: gc.code,
+                            archive: !showArchived,
+                          })
+                        }
+                      >
+                        {showArchived ? "Unarchive" : "Archive"}
+                      </Button>
+                    )}
                   </Box>
                 </CardContent>
               </Card>
@@ -321,6 +438,35 @@ function PurchasesList() {
                           >
                             Redeem
                           </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() =>
+                              setResendTarget({
+                                id: gc.id,
+                                code: gc.code,
+                                email: gc.purchaserEmail,
+                              })
+                            }
+                          >
+                            Resend
+                          </Button>
+                          {editMode && (
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color={showArchived ? "primary" : "warning"}
+                              onClick={() =>
+                                setConfirmTarget({
+                                  id: gc.id,
+                                  code: gc.code,
+                                  archive: !showArchived,
+                                })
+                              }
+                            >
+                              {showArchived ? "Unarchive" : "Archive"}
+                            </Button>
+                          )}
                         </Box>
                       </TableCell>
                     </TableRow>
@@ -351,6 +497,53 @@ function PurchasesList() {
           </Grid>
         )}
       </Grid>
+
+      <Dialog open={!!confirmTarget} onClose={() => setConfirmTarget(null)}>
+        <DialogTitle>
+          {confirmTarget?.archive ? "Archive" : "Unarchive"} Gift Voucher
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to{" "}
+            {confirmTarget?.archive ? "archive" : "unarchive"}{" "}
+            <strong>{confirmTarget?.code}</strong>?
+            {confirmTarget?.archive &&
+              " It will be hidden from the default purchases list."}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmTarget(null)}>Cancel</Button>
+          <Button
+            color={confirmTarget?.archive ? "warning" : "primary"}
+            variant="contained"
+            onClick={() =>
+              confirmTarget &&
+              handleArchiveToggle(confirmTarget.id, confirmTarget.archive)
+            }
+          >
+            {confirmTarget?.archive ? "Archive" : "Unarchive"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={!!resendTarget} onClose={() => setResendTarget(null)}>
+        <DialogTitle>Resend Voucher Email</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Resend the voucher email for <strong>{resendTarget?.code}</strong>{" "}
+            to <strong>{resendTarget?.email}</strong>?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setResendTarget(null)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={() => resendTarget && handleResendEmail(resendTarget.id)}
+          >
+            Send
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

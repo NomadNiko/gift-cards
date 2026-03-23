@@ -34,6 +34,8 @@ type FormData = {
   expirationMonths: string;
   expirationType: "none" | "fixed" | "relative";
   codePrefix: string;
+  adminFeeType: "none" | "fixed" | "percentage";
+  adminFeeValue: string;
 };
 
 const DEFAULT_CODE_POSITION: CodePosition = {
@@ -78,6 +80,8 @@ function CreateTemplate() {
       expirationMonths: "",
       expirationType: "none" as const,
       codePrefix: "GC",
+      adminFeeType: "none" as const,
+      adminFeeValue: "",
     },
   });
 
@@ -85,6 +89,7 @@ function CreateTemplate() {
   const watchedExpType = useWatch({ control, name: "expirationType" });
   const watchedExpMonths = useWatch({ control, name: "expirationMonths" });
   const watchedPrefix = useWatch({ control, name: "codePrefix" });
+  const watchedFeeType = useWatch({ control, name: "adminFeeType" });
   const { code: currencyCode } = useCurrency();
 
   const expirationLabel = (() => {
@@ -190,6 +195,12 @@ function CreateTemplate() {
             ? parseInt(formData.expirationMonths, 10)
             : undefined,
         codePrefix: formData.codePrefix || "GC",
+        adminFeeType:
+          formData.adminFeeType !== "none" ? formData.adminFeeType : undefined,
+        adminFeeValue:
+          formData.adminFeeType !== "none" && formData.adminFeeValue
+            ? parseFloat(formData.adminFeeValue)
+            : null,
         qrPosition,
         isActive: formData.isActive,
       });
@@ -205,7 +216,7 @@ function CreateTemplate() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container spacing={3} pt={3}>
           <Grid size={12}>
-            <Typography variant="h4">Create Gift Card Template</Typography>
+            <Typography variant="h4">Create Gift Voucher Template</Typography>
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
@@ -348,6 +359,48 @@ function CreateTemplate() {
             />
           </Grid>
 
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Controller
+              name="adminFeeType"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  select
+                  label="Admin Fee"
+                  fullWidth
+                  helperText="Added to Stripe charge but not the gift voucher value"
+                >
+                  <MenuItem value="none">No Fee</MenuItem>
+                  <MenuItem value="fixed">Fixed Amount</MenuItem>
+                  <MenuItem value="percentage">Percentage</MenuItem>
+                </TextField>
+              )}
+            />
+          </Grid>
+
+          {watchedFeeType !== "none" && (
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Controller
+                name="adminFeeValue"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label={
+                      watchedFeeType === "percentage"
+                        ? "Fee Percentage (%)"
+                        : "Fee Amount"
+                    }
+                    type="number"
+                    fullWidth
+                    inputProps={{ min: 0, step: 0.01 }}
+                  />
+                )}
+              />
+            </Grid>
+          )}
+
           <Grid size={12}>
             <Controller
               name="description"
@@ -396,7 +449,7 @@ function CreateTemplate() {
                 </ToggleButtonGroup>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
                   {dragMode === "code"
-                    ? "Click and drag to select where the gift card code will appear."
+                    ? "Click and drag to select where the gift voucher code will appear."
                     : "Click to place the QR code. Use the slider below to resize."}
                 </Typography>
                 <Paper

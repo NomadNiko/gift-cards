@@ -201,7 +201,7 @@ export default function WidgetPreview(props: PreviewProps) {
               fullWidth
               sx={{ backgroundColor: primaryColor, fontSize: "0.65rem" }}
             >
-              {buttonText || "Buy Gift Card"}
+              {buttonText || "Buy Gift Voucher"}
             </Button>
           </Box>
         </Paper>

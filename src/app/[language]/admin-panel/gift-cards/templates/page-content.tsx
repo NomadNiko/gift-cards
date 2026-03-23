@@ -76,7 +76,7 @@ function TemplatesList() {
             alignItems: "center",
           }}
         >
-          <Typography variant="h4">Gift Card Templates</Typography>
+          <Typography variant="h4">Gift Voucher Templates</Typography>
           <Button
             variant="contained"
             component={Link}
@@ -188,7 +188,7 @@ function TemplatesList() {
         {!isLoading && templates.length === 0 && (
           <Grid size={12}>
             <Typography color="text.secondary" textAlign="center" py={4}>
-              No templates yet. Create your first gift card template!
+              No templates yet. Create your first gift voucher template!
             </Typography>
           </Grid>
         )}

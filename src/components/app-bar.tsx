@@ -139,8 +139,7 @@ function ResponsiveAppBar() {
               onClose={handleCloseNavMenu}
               sx={{ display: { xs: "block", md: "none" } }}
             >
-              {/* Card Status group */}
-              <ListSubheader>Card Status</ListSubheader>
+              {/* Voucher Status */}
               <MenuItem
                 onClick={handleCloseNavMenu}
                 component={Link}
@@ -148,19 +147,18 @@ function ResponsiveAppBar() {
               >
                 Check Balance
               </MenuItem>
-              {isAdminOrStaff && (
+
+              {isAdminOrStaff && [
+                <Divider key="d1" />,
+                <ListSubheader key="h2">Manage</ListSubheader>,
                 <MenuItem
+                  key="redeem"
                   onClick={handleCloseNavMenu}
                   component={Link}
                   href="/admin-panel/gift-cards/redeem"
                 >
                   Redeem
-                </MenuItem>
-              )}
-
-              {isAdminOrStaff && [
-                <Divider key="d1" />,
-                <ListSubheader key="h2">Manage</ListSubheader>,
+                </MenuItem>,
                 <MenuItem
                   key="generate"
                   onClick={handleCloseNavMenu}
@@ -177,23 +175,11 @@ function ResponsiveAppBar() {
                 >
                   Purchases
                 </MenuItem>,
-                <MenuItem
-                  key="docs"
-                  onClick={handleCloseNavMenu}
-                  component={Link}
-                  href="/admin-panel/gift-cards/docs"
-                >
-                  Docs
-                </MenuItem>,
               ]}
 
               {isAdmin && [
-                ...(isStaff
-                  ? [
-                      <Divider key="d1a" />,
-                      <ListSubheader key="h2a">Manage</ListSubheader>,
-                    ]
-                  : []),
+                <Divider key="d2" />,
+                <ListSubheader key="h3">Admin</ListSubheader>,
                 <MenuItem
                   key="templates"
                   onClick={handleCloseNavMenu}
@@ -210,8 +196,6 @@ function ResponsiveAppBar() {
                 >
                   Widgets
                 </MenuItem>,
-                <Divider key="d2" />,
-                <ListSubheader key="h3">Admin</ListSubheader>,
                 <MenuItem
                   key="settings"
                   onClick={handleCloseNavMenu}
@@ -227,6 +211,18 @@ function ResponsiveAppBar() {
                   href="/admin-panel/users"
                 >
                   {t("common:navigation.users")}
+                </MenuItem>,
+              ]}
+
+              {isAdminOrStaff && [
+                <Divider key="d3" />,
+                <MenuItem
+                  key="docs"
+                  onClick={handleCloseNavMenu}
+                  component={Link}
+                  href="/admin-panel/gift-cards/docs"
+                >
+                  Docs
                 </MenuItem>,
               ]}
 
@@ -278,33 +274,22 @@ function ResponsiveAppBar() {
 
           {/* Desktop nav */}
           <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
-            <NavDropdown
-              label="Card Status"
-              items={[
-                { href: "/gift-cards/balance", text: "Check Balance" },
-                ...(isAdminOrStaff
-                  ? [
-                      {
-                        href: "/admin-panel/gift-cards/redeem",
-                        text: "Redeem",
-                      },
-                    ]
-                  : []),
-              ]}
-            />
+            <Button
+              sx={{ my: 2, color: "white" }}
+              component={Link}
+              href="/gift-cards/balance"
+            >
+              Check Balance
+            </Button>
 
             {isAdminOrStaff && (
               <NavDropdown
                 label="Manage"
                 items={[
-                  ...(isAdmin
-                    ? [
-                        {
-                          href: "/admin-panel/gift-cards/templates",
-                          text: "Templates",
-                        },
-                      ]
-                    : []),
+                  {
+                    href: "/admin-panel/gift-cards/redeem",
+                    text: "Redeem",
+                  },
                   {
                     href: "/admin-panel/gift-cards/generate",
                     text: "Generate",
@@ -312,18 +297,6 @@ function ResponsiveAppBar() {
                   {
                     href: "/admin-panel/gift-cards/purchases",
                     text: "Purchases",
-                  },
-                  ...(isAdmin
-                    ? [
-                        {
-                          href: "/admin-panel/gift-cards/widgets",
-                          text: "Widgets",
-                        },
-                      ]
-                    : []),
-                  {
-                    href: "/admin-panel/gift-cards/docs",
-                    text: "Docs",
                   },
                 ]}
               />
@@ -334,6 +307,14 @@ function ResponsiveAppBar() {
                 label="Admin"
                 items={[
                   {
+                    href: "/admin-panel/gift-cards/templates",
+                    text: "Templates",
+                  },
+                  {
+                    href: "/admin-panel/gift-cards/widgets",
+                    text: "Widgets",
+                  },
+                  {
                     href: "/admin-panel/gift-cards/settings",
                     text: "Settings",
                   },
@@ -343,6 +324,16 @@ function ResponsiveAppBar() {
                   },
                 ]}
               />
+            )}
+
+            {isAdminOrStaff && (
+              <Button
+                sx={{ my: 2, color: "white" }}
+                component={Link}
+                href="/admin-panel/gift-cards/docs"
+              >
+                Docs
+              </Button>
             )}
           </Box>
 

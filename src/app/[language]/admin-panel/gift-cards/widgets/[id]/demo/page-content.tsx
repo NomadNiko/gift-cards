@@ -360,7 +360,7 @@ function WidgetDemo() {
                   >
                     {purchasing
                       ? "Processing..."
-                      : widget.customization.buttonText || "Buy Gift Card"}
+                      : widget.customization.buttonText || "Buy Gift Voucher"}
                   </Button>
                 </Box>
               </Box>
@@ -378,7 +378,7 @@ function WidgetDemo() {
                   sx={{ p: 3, mb: 2, display: "inline-block" }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    Gift Card Code
+                    Gift Voucher Code
                   </Typography>
                   <Typography
                     variant="h4"
@@ -522,9 +522,9 @@ function WidgetDemo() {
             </Typography>
             <Typography variant="body2">
               Use the live demo on the left to test the full purchase flow. The
-              gift card will be created in the system and emails will be sent to
-              the addresses provided. No payment is charged during the proof of
-              concept phase.
+              gift voucher will be created in the system and emails will be sent
+              to the addresses provided. No payment is charged during the proof
+              of concept phase.
             </Typography>
           </Paper>
         </Grid>

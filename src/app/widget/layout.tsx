@@ -11,7 +11,7 @@ import queryClient from "@/services/react-query/query-client";
 import { CurrencyProvider } from "@/services/currency/currency-provider";
 
 export const metadata: Metadata = {
-  title: "Gift Card Widget",
+  title: "Gift Voucher Widget",
 };
 
 export default function WidgetLayout({

@@ -349,7 +349,7 @@ function SettingsPage() {
                     >
                       <Typography variant="subtitle2">Squarespace</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Auto-create gift cards from Squarespace orders
+                        Auto-create gift vouchers from Squarespace orders
                       </Typography>
                     </Paper>
                   </Grid>
@@ -408,9 +408,9 @@ function SettingsPage() {
                     <Alert severity="info" sx={{ mb: 2 }}>
                       Each pay link product name must be unique and must not be
                       a substring of another. For example, do not create both
-                      &quot;Gift Cards&quot; and &quot;Buy Gift Cards&quot; —
-                      the exact product name from your Squarespace pay link is
-                      used for matching.
+                      &quot;Gift Vouchers&quot; and &quot;Buy Gift
+                      Vouchers&quot; — the exact product name from your
+                      Squarespace pay link is used for matching.
                     </Alert>
 
                     {squarespacePayLinks.map((pl) => (
@@ -487,7 +487,7 @@ function SettingsPage() {
               Notification Email List
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              These addresses receive a notification for every gift card
+              These addresses receive a notification for every gift voucher
               purchase and are BCC&apos;d on all purchase confirmation emails.
             </Typography>
 
@@ -567,7 +567,7 @@ function SettingsPage() {
           />
           <TextField
             select
-            label="Gift Card Template"
+            label="Gift Voucher Template"
             value={plTemplateId}
             onChange={(e) => setPlTemplateId(e.target.value)}
             fullWidth

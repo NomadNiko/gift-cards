@@ -14,7 +14,7 @@ export default function PaymentSuccessPage() {
       >
         <div>
           <h2>✓ Payment Complete</h2>
-          <p>You can close this tab. Your gift card is being prepared.</p>
+          <p>You can close this tab. Your gift voucher is being prepared.</p>
         </div>
       </body>
     </html>

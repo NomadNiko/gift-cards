@@ -79,7 +79,7 @@ function EditWidget() {
       textColor: "#000000",
       fieldLabelColor: "#666666",
       fieldTextColor: "#000000",
-      buttonText: "Buy Gift Card",
+      buttonText: "Buy Gift Voucher",
       titleDisplay: "",
       headerText: "",
       footerText: "",
@@ -100,7 +100,7 @@ function EditWidget() {
         textColor: widget.customization?.textColor || "#000000",
         fieldLabelColor: widget.customization?.fieldLabelColor || "#666666",
         fieldTextColor: widget.customization?.fieldTextColor || "#000000",
-        buttonText: widget.customization?.buttonText || "Buy Gift Card",
+        buttonText: widget.customization?.buttonText || "Buy Gift Voucher",
         titleDisplay: widget.customization?.titleDisplay || "",
         headerText: widget.customization?.headerText || "",
         footerText: widget.customization?.footerText || "",
@@ -478,7 +478,7 @@ function EditWidget() {
               textColor={watched.textColor || "#000000"}
               fieldLabelColor={watched.fieldLabelColor || "#666666"}
               fieldTextColor={watched.fieldTextColor || "#000000"}
-              buttonText={watched.buttonText || "Buy Gift Card"}
+              buttonText={watched.buttonText || "Buy Gift Voucher"}
               titleDisplay={watched.titleDisplay || ""}
               templateImage={selectedTemplate?.image}
             />

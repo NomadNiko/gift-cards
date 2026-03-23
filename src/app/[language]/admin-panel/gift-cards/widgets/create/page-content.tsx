@@ -63,7 +63,7 @@ function CreateWidget() {
       textColor: "#000000",
       fieldLabelColor: "#666666",
       fieldTextColor: "#000000",
-      buttonText: "Buy Gift Card",
+      buttonText: "Buy Gift Voucher",
       titleDisplay: "",
       headerText: "",
       footerText: "",
@@ -430,7 +430,7 @@ function CreateWidget() {
               textColor={watched.textColor || "#000000"}
               fieldLabelColor={watched.fieldLabelColor || "#666666"}
               fieldTextColor={watched.fieldTextColor || "#000000"}
-              buttonText={watched.buttonText || "Buy Gift Card"}
+              buttonText={watched.buttonText || "Buy Gift Voucher"}
               titleDisplay={watched.titleDisplay || ""}
               templateImage={selectedTemplate?.image}
             />

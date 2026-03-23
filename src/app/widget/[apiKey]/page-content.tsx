@@ -76,7 +76,7 @@ export default function WidgetPageContent() {
           if (status === HTTP_CODES_ENUM.OK && data?.id) {
             if (pollRef.current) clearInterval(pollRef.current);
             setPurchasedCard(data);
-            setActiveStep(3);
+            setActiveStep(4);
             setPurchasing(false);
           }
         } catch {
@@ -86,7 +86,7 @@ export default function WidgetPageContent() {
           if (pollRef.current) clearInterval(pollRef.current);
           setPurchasing(false);
           setError(
-            "Payment received but gift card is still processing. Check your email shortly."
+            "Payment received but gift voucher is still processing. Check your email shortly."
           );
         }
       }, 2000);
@@ -176,7 +176,7 @@ export default function WidgetPageContent() {
         const { status, data } = await purchaseGiftCard(purchaseData);
         if (status === HTTP_CODES_ENUM.CREATED) {
           setPurchasedCard(data);
-          setActiveStep(3);
+          setActiveStep(4);
         } else {
           setError("Purchase failed. Please try again.");
         }
@@ -448,13 +448,122 @@ export default function WidgetPageContent() {
                   color: textColor,
                 }}
               >
+                Disclaimer
+              </Typography>
+              <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2 }}>
+                <Typography variant="body2" sx={{ color: textColor, mb: 1 }}>
+                  All vouchers are valid for 12 months from the date of
+                  purchase.
+                </Typography>
+                <Typography variant="body2" sx={{ color: textColor, mb: 1 }}>
+                  Vouchers purchased online are subject to a 3.5% Transaction
+                  Fee.
+                </Typography>
+                <Typography variant="body2" sx={{ color: textColor, mb: 1 }}>
+                  To redeem a voucher, please make a reservation through one of
+                  the following methods:
+                </Typography>
+                <Typography
+                  variant="body2"
+                  component="div"
+                  sx={{ color: textColor, pl: 2, mb: 1 }}
+                >
+                  Website:{" "}
+                  <a
+                    href="https://www.thehurstwood.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: c.primaryColor }}
+                  >
+                    www.thehurstwood.com
+                  </a>
+                  <br />
+                  Email:{" "}
+                  <a
+                    href="mailto:bookings@thehurstwood.com"
+                    style={{ color: c.primaryColor }}
+                  >
+                    bookings@thehurstwood.com
+                  </a>
+                  <br />
+                  Phone:{" "}
+                  <a href="tel:+441825732257" style={{ color: c.primaryColor }}>
+                    +44 1825 732257
+                  </a>
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ color: textColor, fontWeight: 700 }}
+                >
+                  THIS VOUCHER DOES NOT HAVE A CASH VALUE.
+                </Typography>
+              </Paper>
+              <Box sx={{ display: "flex", gap: 2 }}>
+                <Button
+                  variant="outlined"
+                  onClick={() => setActiveStep(1)}
+                  sx={{ borderColor: secondaryColor, color: secondaryColor }}
+                >
+                  Back
+                </Button>
+                <Button
+                  variant="contained"
+                  fullWidth
+                  onClick={() => setActiveStep(3)}
+                  sx={{
+                    backgroundColor: c.primaryColor,
+                  }}
+                >
+                  I Understand, Continue
+                </Button>
+              </Box>
+            </Box>
+          )}
+          {activeStep === 3 && (
+            <Box>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{
+                  fontSize: { xs: "1rem", sm: "1.25rem" },
+                  color: textColor,
+                }}
+              >
                 Review Your Order
               </Typography>
               <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2 }}>
                 <Typography variant="body2" sx={{ color: textColor }}>
-                  <strong>Amount:</strong> {CURRENCY_SYMBOL}
+                  <strong>Gift Voucher Value:</strong> {CURRENCY_SYMBOL}
                   {parseFloat(amount).toFixed(2)}
                 </Typography>
+                {(() => {
+                  const feeType = template?.adminFeeType;
+                  const feeVal = template?.adminFeeValue || 0;
+                  const amt = parseFloat(amount);
+                  const fee =
+                    feeType === "fixed"
+                      ? feeVal
+                      : feeType === "percentage"
+                        ? Math.round(amt * feeVal) / 100
+                        : 0;
+                  if (!fee) return null;
+                  return (
+                    <>
+                      <Typography variant="body2" sx={{ color: textColor }}>
+                        <strong>Processing Fee:</strong> {CURRENCY_SYMBOL}
+                        {fee.toFixed(2)}
+                        {feeType === "percentage" ? ` (${feeVal}%)` : ""}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: textColor, fontWeight: 700, mt: 0.5 }}
+                      >
+                        Total: {CURRENCY_SYMBOL}
+                        {(amt + fee).toFixed(2)}
+                      </Typography>
+                    </>
+                  );
+                })()}
                 <Typography variant="body2" sx={{ color: textColor }}>
                   <strong>From:</strong> {purchaserName} ({purchaserEmail})
                 </Typography>
@@ -478,7 +587,7 @@ export default function WidgetPageContent() {
               <Box sx={{ display: "flex", gap: 2 }}>
                 <Button
                   variant="outlined"
-                  onClick={() => setActiveStep(1)}
+                  onClick={() => setActiveStep(2)}
                   sx={{ borderColor: secondaryColor, color: secondaryColor }}
                 >
                   Back
@@ -496,12 +605,12 @@ export default function WidgetPageContent() {
                     ? paymentConfig.paymentMode === "production"
                       ? "Waiting for payment..."
                       : "Processing..."
-                    : c.buttonText || "Buy Gift Card"}
+                    : c.buttonText || "Buy Gift Voucher"}
                 </Button>
               </Box>
             </Box>
           )}
-          {activeStep === 3 && purchasedCard && (
+          {activeStep === 4 && purchasedCard && (
             <Box sx={{ textAlign: "center" }}>
               <Alert severity="success" sx={{ mb: 2 }}>
                 Gift card purchased successfully! An email has been sent to{" "}
@@ -512,7 +621,7 @@ export default function WidgetPageContent() {
                 sx={{ p: { xs: 2, sm: 3 }, mb: 2, display: "inline-block" }}
               >
                 <Typography variant="body2" color="text.secondary">
-                  Gift Card Code
+                  Gift Voucher Code
                 </Typography>
                 <Typography
                   variant="h4"

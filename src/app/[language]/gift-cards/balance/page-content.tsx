@@ -55,7 +55,7 @@ export default function BalanceLookup() {
         if (status === HTTP_CODES_ENUM.OK) {
           setResults(data);
           if (data.length === 0)
-            setError("No gift cards found for this email.");
+            setError("No gift vouchers found for this email.");
         }
       } else {
         const { status, data } = await lookupByCode(q.toUpperCase());
@@ -84,17 +84,17 @@ export default function BalanceLookup() {
       <Grid container spacing={3} pt={6}>
         <Grid size={12} sx={{ textAlign: "center" }}>
           <Typography variant="h4" gutterBottom>
-            Check Gift Card Balance
+            Check Gift Voucher Balance
           </Typography>
           <Typography color="text.secondary">
-            Enter your gift card code or email address
+            Enter your gift voucher code or email address
           </Typography>
         </Grid>
 
         <Grid size={12}>
           <Box sx={{ display: "flex", gap: 2 }}>
             <TextField
-              label="Gift Card Code or Email"
+              label="Gift Voucher Code or Email"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="GC-XXXX-XXXX or email@example.com"

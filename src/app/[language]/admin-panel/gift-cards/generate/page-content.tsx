@@ -65,10 +65,10 @@ function GenerateGiftCard() {
         setRecipientEmail("");
         setNotes("");
       } else {
-        setError("Failed to generate gift card.");
+        setError("Failed to generate gift voucher.");
       }
     } catch {
-      setError("Failed to generate gift card.");
+      setError("Failed to generate gift voucher.");
     } finally {
       setSaving(false);
     }
@@ -90,9 +90,9 @@ function GenerateGiftCard() {
     <Container maxWidth="sm">
       <Grid container spacing={3} pt={3}>
         <Grid size={12}>
-          <Typography variant="h4">Generate Gift Card</Typography>
+          <Typography variant="h4">Generate Gift Voucher</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Create a gift card without a purchase — for promotions,
+            Create a gift voucher without a purchase — for promotions,
             complimentary gifts, or replacements.
           </Typography>
         </Grid>
@@ -144,7 +144,7 @@ function GenerateGiftCard() {
                   value={fromName}
                   onChange={(e) => setFromName(e.target.value)}
                   fullWidth
-                  helperText="Who is this gift card from? e.g. The Hurstwood"
+                  helperText="Who is this gift voucher from? e.g. The Hurstwood"
                 />
               </Grid>
 
@@ -164,7 +164,7 @@ function GenerateGiftCard() {
                   value={recipientEmail}
                   onChange={(e) => setRecipientEmail(e.target.value)}
                   fullWidth
-                  helperText="If provided, the gift card will be emailed to this address"
+                  helperText="If provided, the gift voucher will be emailed to this address"
                 />
               </Grid>
 
@@ -189,7 +189,7 @@ function GenerateGiftCard() {
             disabled={saving || !canSubmit}
             size="large"
           >
-            {saving ? "Generating..." : "Generate Gift Card"}
+            {saving ? "Generating..." : "Generate Gift Voucher"}
           </Button>
         </Grid>
       </Grid>

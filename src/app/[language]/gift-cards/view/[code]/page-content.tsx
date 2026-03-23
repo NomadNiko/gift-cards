@@ -106,7 +106,7 @@ export default function GiftCardView() {
       <Grid container spacing={3} pt={4}>
         <Grid size={12} sx={{ textAlign: "center" }} className="no-print">
           <Button variant="contained" onClick={handlePrint} sx={{ mb: 2 }}>
-            Print Gift Card
+            Print Gift Voucher
           </Button>
         </Grid>
 
@@ -123,7 +123,7 @@ export default function GiftCardView() {
                 <img
                   ref={imgRef}
                   src={template.image}
-                  alt="Gift Card"
+                  alt="Gift Voucher"
                   style={{ width: "100%", display: "block" }}
                   onLoad={updateScale}
                 />
@@ -255,6 +255,42 @@ export default function GiftCardView() {
                   Scan to check balance or redeem
                 </Typography>
               </Box>
+            </Box>
+
+            {/* Disclaimer */}
+            <Box
+              sx={{
+                px: 3,
+                pb: 3,
+                pt: 1,
+                borderTop: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <Typography
+                variant="caption"
+                component="div"
+                color="text.secondary"
+                sx={{ lineHeight: 1.7 }}
+              >
+                All vouchers are valid for 12 months from the date of purchase.
+                <br />
+                Vouchers purchased online are subject to a 3.5% Transaction Fee.
+                <br />
+                To redeem a voucher, please make a reservation:
+                <br />
+                Website:{" "}
+                <a href="https://www.thehurstwood.com">www.thehurstwood.com</a>
+                <br />
+                Email:{" "}
+                <a href="mailto:bookings@thehurstwood.com">
+                  bookings@thehurstwood.com
+                </a>
+                <br />
+                Phone: <a href="tel:+441825732257">+44 1825 732257</a>
+                <br />
+                <strong>THIS VOUCHER DOES NOT HAVE A CASH VALUE.</strong>
+              </Typography>
             </Box>
           </Paper>
         </Grid>

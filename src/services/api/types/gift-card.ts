@@ -25,6 +25,7 @@ export interface GiftCard {
   status: "active" | "partially_redeemed" | "fully_redeemed" | "cancelled";
   redemptions: Redemption[];
   notes?: string;
+  isArchived?: boolean;
   createdAt: string;
   updatedAt: string;
 }

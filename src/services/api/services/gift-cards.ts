@@ -56,6 +56,7 @@ export type GetGiftCardsRequest = {
   limit: number;
   status?: string;
   templateId?: string;
+  isArchived?: boolean;
 };
 
 export function useGetGiftCardsService() {
@@ -68,6 +69,7 @@ export function useGetGiftCardsService() {
       if (data.status) url.searchParams.append("status", data.status);
       if (data.templateId)
         url.searchParams.append("templateId", data.templateId);
+      if (data.isArchived) url.searchParams.append("isArchived", "true");
       return fetch(url, { method: "GET", ...requestConfig }).then(
         wrapperFetchJsonResponse<InfinityPaginationType<GiftCard>>
       );
@@ -176,6 +178,45 @@ export function useUnredeemGiftCardService() {
       fetch(`${API_URL}/v1/gift-cards/${id}/unredeem`, {
         method: "POST",
         body: JSON.stringify(data),
+        ...requestConfig,
+      }).then(wrapperFetchJsonResponse<GiftCard>),
+    [fetch]
+  );
+}
+
+// --- Resend Email ---
+export function useResendGiftCardEmailService() {
+  const fetch = useFetch();
+  return useCallback(
+    (id: string, requestConfig?: RequestConfigType) =>
+      fetch(`${API_URL}/v1/gift-cards/${id}/resend-email`, {
+        method: "POST",
+        ...requestConfig,
+      }).then(wrapperFetchJsonResponse<{ sent: boolean }>),
+    [fetch]
+  );
+}
+
+// --- Archive (Admin) ---
+export function useArchiveGiftCardService() {
+  const fetch = useFetch();
+  return useCallback(
+    (id: string, requestConfig?: RequestConfigType) =>
+      fetch(`${API_URL}/v1/gift-cards/${id}/archive`, {
+        method: "PATCH",
+        ...requestConfig,
+      }).then(wrapperFetchJsonResponse<GiftCard>),
+    [fetch]
+  );
+}
+
+// --- Unarchive (Admin) ---
+export function useUnarchiveGiftCardService() {
+  const fetch = useFetch();
+  return useCallback(
+    (id: string, requestConfig?: RequestConfigType) =>
+      fetch(`${API_URL}/v1/gift-cards/${id}/unarchive`, {
+        method: "PATCH",
         ...requestConfig,
       }).then(wrapperFetchJsonResponse<GiftCard>),
     [fetch]

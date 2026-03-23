@@ -2,6 +2,7 @@
 
 import { RoleEnum } from "@/services/api/types/role";
 import withPageRequiredAuth from "@/services/auth/with-page-required-auth";
+import useAuth from "@/services/auth/use-auth";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -61,6 +62,9 @@ function RedeemPage() {
     id: string;
     amount: number;
   } | null>(null);
+
+  const { user } = useAuth();
+  const isAdmin = !!user?.role && Number(user.role.id) === RoleEnum.ADMIN;
 
   const handleLookup = useCallback(async () => {
     setError(null);
@@ -161,14 +165,14 @@ function RedeemPage() {
     <Container maxWidth="md">
       <Grid container spacing={3} pt={3}>
         <Grid size={12}>
-          <Typography variant="h4">Redeem Gift Card</Typography>
+          <Typography variant="h4">Redeem Gift Voucher</Typography>
         </Grid>
 
         <Grid size={12}>
           <Paper sx={{ p: 3 }}>
             <Box sx={{ display: "flex", gap: 2 }}>
               <TextField
-                label="Gift Card Code"
+                label="Gift Voucher Code"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="GC-XXXX-XXXX"
@@ -319,8 +323,8 @@ function RedeemPage() {
                           color="text.secondary"
                           sx={{ mt: 1, display: "block" }}
                         >
-                          This gift card is single-use. The full balance will be
-                          redeemed.
+                          This gift voucher is single-use. The full balance will
+                          be redeemed.
                         </Typography>
                       )}
                     </>
@@ -399,7 +403,7 @@ function RedeemPage() {
                           <TableCell>
                             {r.reversed ? (
                               <Chip label="Reversed" size="small" />
-                            ) : (
+                            ) : isAdmin ? (
                               <Tooltip title="Undo this redemption">
                                 <IconButton
                                   size="small"
@@ -414,7 +418,7 @@ function RedeemPage() {
                                   <UndoIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                            )}
+                            ) : null}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -431,7 +435,8 @@ function RedeemPage() {
         <DialogTitle>Reverse Redemption</DialogTitle>
         <DialogContent>
           Restore {CURRENCY_SYMBOL}
-          {confirmUnredeem?.amount.toFixed(2)} to this gift card&apos;s balance?
+          {confirmUnredeem?.amount.toFixed(2)} to this gift voucher&apos;s
+          balance?
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmUnredeem(null)}>Cancel</Button>

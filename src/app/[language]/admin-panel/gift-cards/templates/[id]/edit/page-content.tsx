@@ -39,6 +39,8 @@ type FormData = {
   expirationMonths: string;
   expirationType: "none" | "fixed" | "relative";
   codePrefix: string;
+  adminFeeType: "none" | "fixed" | "percentage";
+  adminFeeValue: string;
 };
 
 const DEFAULT_CODE_POSITION: CodePosition = {
@@ -87,6 +89,8 @@ function EditTemplate() {
       expirationMonths: "",
       expirationType: "none" as const,
       codePrefix: "GC",
+      adminFeeType: "none" as const,
+      adminFeeValue: "",
     },
   });
 
@@ -94,6 +98,7 @@ function EditTemplate() {
   const watchedExpType = useWatch({ control, name: "expirationType" });
   const watchedExpMonths = useWatch({ control, name: "expirationMonths" });
   const watchedPrefix = useWatch({ control, name: "codePrefix" });
+  const watchedFeeType = useWatch({ control, name: "adminFeeType" });
   const { code: currencyCode } = useCurrency();
 
   const expirationLabel = (() => {
@@ -135,6 +140,8 @@ function EditTemplate() {
               ? String(data.expirationMonths)
               : "",
             codePrefix: data.codePrefix || "GC",
+            adminFeeType: data.adminFeeType || "none",
+            adminFeeValue: data.adminFeeValue ? String(data.adminFeeValue) : "",
           });
           setImageUrl(data.image);
           if (data.codePosition) {
@@ -243,6 +250,12 @@ function EditTemplate() {
             ? parseInt(formData.expirationMonths, 10)
             : null,
         codePrefix: formData.codePrefix || "GC",
+        adminFeeType:
+          formData.adminFeeType !== "none" ? formData.adminFeeType : "none",
+        adminFeeValue:
+          formData.adminFeeType !== "none" && formData.adminFeeValue
+            ? parseFloat(formData.adminFeeValue)
+            : null,
         qrPosition,
         isActive: formData.isActive,
       });
@@ -266,7 +279,7 @@ function EditTemplate() {
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container spacing={3} pt={3}>
           <Grid size={12}>
-            <Typography variant="h4">Edit Gift Card Template</Typography>
+            <Typography variant="h4">Edit Gift Voucher Template</Typography>
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
@@ -408,6 +421,48 @@ function EditTemplate() {
               )}
             />
           </Grid>
+
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Controller
+              name="adminFeeType"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  select
+                  label="Admin Fee"
+                  fullWidth
+                  helperText="Added to Stripe charge but not the gift voucher value"
+                >
+                  <MenuItem value="none">No Fee</MenuItem>
+                  <MenuItem value="fixed">Fixed Amount</MenuItem>
+                  <MenuItem value="percentage">Percentage</MenuItem>
+                </TextField>
+              )}
+            />
+          </Grid>
+
+          {watchedFeeType !== "none" && (
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Controller
+                name="adminFeeValue"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label={
+                      watchedFeeType === "percentage"
+                        ? "Fee Percentage (%)"
+                        : "Fee Amount"
+                    }
+                    type="number"
+                    fullWidth
+                    inputProps={{ min: 0, step: 0.01 }}
+                  />
+                )}
+              />
+            </Grid>
+          )}
 
           <Grid size={12}>
             <Controller

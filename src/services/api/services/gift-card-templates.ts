@@ -18,6 +18,8 @@ export type CreateGiftCardTemplateRequest = {
   expirationMonths?: number | null;
   codePrefix?: string;
   qrPosition?: QrPosition;
+  adminFeeType?: "none" | "fixed" | "percentage";
+  adminFeeValue?: number | null;
   isActive?: boolean;
 };
 

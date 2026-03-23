@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import CreateTemplate from "./page-content";
 
 export const metadata: Metadata = {
-  title: "Create Gift Card Template",
+  title: "Create Gift Voucher Template",
 };
 
 export default function Page() {

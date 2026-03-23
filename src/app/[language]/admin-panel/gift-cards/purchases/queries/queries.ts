@@ -10,11 +10,13 @@ export const giftCardsQueryKeys = createQueryKeys(["giftCards"], {
       by: ({
         status,
         templateId,
+        isArchived,
       }: {
         status?: string;
         templateId?: string;
+        isArchived?: boolean;
       }) => ({
-        key: [status, templateId],
+        key: [status, templateId, isArchived],
       }),
     },
   }),
@@ -23,15 +25,18 @@ export const giftCardsQueryKeys = createQueryKeys(["giftCards"], {
 export const useGetGiftCardsQuery = ({
   status,
   templateId,
-}: { status?: string; templateId?: string } = {}) => {
+  isArchived,
+}: { status?: string; templateId?: string; isArchived?: boolean } = {}) => {
   const fetch = useGetGiftCardsService();
 
   return useInfiniteQuery({
-    queryKey: giftCardsQueryKeys.list().sub.by({ status, templateId }).key,
+    queryKey: giftCardsQueryKeys
+      .list()
+      .sub.by({ status, templateId, isArchived }).key,
     initialPageParam: 1,
     queryFn: async ({ pageParam, signal }) => {
       const { status: httpStatus, data } = await fetch(
-        { page: pageParam, limit: 10, status, templateId },
+        { page: pageParam, limit: 10, status, templateId, isArchived },
         { signal }
       );
       if (httpStatus === HTTP_CODES_ENUM.OK) {
